@@ -2,7 +2,9 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { BusinessProvider } from './context/BusinessContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import GlobalHandlers from './components/GlobalHandlers';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -27,6 +29,7 @@ function BusinessSelectGate() {
 function AppRoutes() {
   return (
     <>
+      <GlobalHandlers />
       <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -78,10 +81,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BusinessProvider>
-        <AppRoutes />
-      </BusinessProvider>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <BusinessProvider>
+          <AppRoutes />
+        </BusinessProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

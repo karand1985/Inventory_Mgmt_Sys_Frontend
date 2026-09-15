@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AUTH_STORAGE_KEY as STORAGE_KEY } from '../config';
 
 const AuthContext = createContext(null);
-
-const STORAGE_KEY = 'inventory_auth';
 
 async function loginRequest(email, password) {
   const res = await fetch('/api/auth/login', {
@@ -44,6 +43,12 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // Clears React auth state without any network call. Used by the global 401
+  // handler (the HTTP client already wipes localStorage before emitting).
+  function clearSession() {
+    setUser(null);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -55,7 +60,8 @@ export function AuthProvider({ children }) {
         isViewer: user?.role === 'VIEWER',
         isSuperAdmin: user?.role === 'SUPER_ADMIN',
         login,
-        logout
+        logout,
+        clearSession
       }}
     >
       {children}
