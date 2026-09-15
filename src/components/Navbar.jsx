@@ -74,7 +74,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2 text-sm">
             <span className="text-ink/70 hidden sm:inline">
-              {user.name}
+              {user.email}
               {isViewer && <span className="text-ink/40"> · view only</span>}
             </span>
             <button onClick={handleLogout} className="text-ink/50 hover:text-ink underline">

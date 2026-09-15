@@ -1,16 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AUTH_STORAGE_KEY as STORAGE_KEY } from '../config';
+import { http } from '../api/client';
 
 const AuthContext = createContext(null);
 
+/**
+ * Calls the real backend contract:
+ *   POST /api/v1/auth/login -> { token, tokenType:"Bearer", email, role, expiresInMs }
+ * Routed through the shared http client so it inherits ApiError parsing. We
+ * derive an absolute `expiresAt` timestamp from the relative `expiresInMs` so
+ * the stored session can be reasoned about locally (the 401 handler remains the
+ * source of truth for server-side expiry).
+ */
 async function loginRequest(email, password) {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  });
-  if (!res.ok) throw new Error('Incorrect email or password');
-  return res.json();
+  const data = await http.post('/auth/login', { email, password });
+  const expiresAt =
+    typeof data.expiresInMs === 'number' ? Date.now() + data.expiresInMs : null;
+  return { ...data, expiresAt };
 }
 
 export function AuthProvider({ children }) {
@@ -33,13 +39,9 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  // The backend is stateless (JWT); there's no server logout endpoint. Logging
+  // out simply forgets the token locally.
   function logout() {
-    if (user?.token) {
-      fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${user.token}` }
-      }).catch(() => {});
-    }
     setUser(null);
   }
 
@@ -49,16 +51,24 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  const role = user?.role;
+  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isOwner = role === 'OWNER';
+  const isViewer = role === 'VIEWER';
+  // Writes (POST/PUT/PATCH/DELETE) require OWNER or SUPER_ADMIN per the API.
+  const canWrite = isSuperAdmin || isOwner;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token: user?.token,
-        role: user?.role,
-        businessId: user?.businessId,
-        businessName: user?.businessName,
-        isViewer: user?.role === 'VIEWER',
-        isSuperAdmin: user?.role === 'SUPER_ADMIN',
+        email: user?.email,
+        role,
+        isViewer,
+        isOwner,
+        isSuperAdmin,
+        canWrite,
         login,
         logout,
         clearSession
