@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api/client';
+import { api } from '../api';
 import { useBusiness, themeFor } from '../context/BusinessContext';
+import { useToast } from '../context/ToastContext';
 import ImageUploader from '../components/ImageUploader';
 
 const ACCENT_BG = { yogart: 'bg-yogart', mk: 'bg-mk' };
@@ -11,61 +12,76 @@ export default function ProductForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { selected } = useBusiness();
+  const { success, error: toastError } = useToast();
   const theme = themeFor(selected?.name);
 
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
+  const [productCode, setProductCode] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [costPrice, setCostPrice] = useState('');
   const [sellPrice, setSellPrice] = useState('');
   const [seasonTag, setSeasonTag] = useState('');
-  const [lowStockThreshold, setLowStockThreshold] = useState(3);
   const [images, setImages] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  // Map of field -> message from ApiError.fieldErrors for inline validation.
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     if (!selected) return;
-    api.categories.list(selected.id).then(setCategories);
+    api.categories.list(selected.id).then(setCategories).catch((err) => toastError(err.message));
   }, [selected]);
 
   useEffect(() => {
     if (!isEdit) return;
-    api.products.get(id).then((p) => {
-      setName(p.name);
-      setCategoryId(p.category?.id ?? '');
-      setCostPrice(p.costPrice ?? '');
-      setSellPrice(p.sellPrice ?? '');
-      setSeasonTag(p.seasonTag ?? '');
-      setLowStockThreshold(p.lowStockThreshold ?? 3);
-      setImages(p.images ?? []);
-    });
+    api.products
+      .get(id)
+      .then((p) => {
+        setName(p.name);
+        setProductCode(p.productCode ?? '');
+        setCategoryId(p.categoryId ?? '');
+        setCostPrice(p.costPrice ?? '');
+        setSellPrice(p.sellPrice ?? '');
+        setSeasonTag(p.seasonTag ?? '');
+        setImages(p.images ?? []);
+      })
+      .catch((err) => toastError(err.message));
   }, [id, isEdit]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setFieldErrors({});
     try {
       const payload = {
         businessId: selected.id,
-        categoryId,
+        categoryId: Number(categoryId),
         name,
+        productCode,
         costPrice: costPrice === '' ? null : Number(costPrice),
         sellPrice: sellPrice === '' ? null : Number(sellPrice),
         seasonTag: seasonTag || null,
-        lowStockThreshold: Number(lowStockThreshold)
       };
-      const saved = isEdit ? await api.products.update(id, payload) : await api.products.create(payload);
+      const saved = isEdit
+        ? await api.products.update(id, payload)
+        : await api.products.create(payload);
+      success(isEdit ? 'Product updated.' : 'Product created.');
       navigate(`/products/${saved.id}`);
     } catch (err) {
-      setError(err.message || 'Something went wrong saving this product.');
+      // fieldErrors drive inline messages; the top-level message goes to a toast.
+      setFieldErrors(err.fieldErrors || {});
+      toastError(err.message || 'Something went wrong saving this product.');
     } finally {
       setSaving(false);
     }
   }
 
   if (!selected) return null;
+
+  const fieldError = (name) =>
+    fieldErrors[name] ? (
+      <span className="text-xs text-red-600">{fieldErrors[name]}</span>
+    ) : null;
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
@@ -83,6 +99,22 @@ export default function ProductForm() {
             className="border border-line rounded-md px-3 py-2 bg-white"
             placeholder="e.g. Krishna frame — medium"
           />
+          {fieldError('name')}
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Product code (SKU)</span>
+          <input
+            required
+            value={productCode}
+            onChange={(e) => setProductCode(e.target.value)}
+            className="border border-line rounded-md px-3 py-2 bg-white"
+            placeholder="e.g. MK-01-J"
+          />
+          <span className="text-xs text-ink/50">
+            Required, unique admin SKU for this product.
+          </span>
+          {fieldError('productCode')}
         </label>
 
         <label className="flex flex-col gap-1">
@@ -102,6 +134,7 @@ export default function ProductForm() {
               </option>
             ))}
           </select>
+          {fieldError('categoryId')}
         </label>
 
         <div className="grid grid-cols-2 gap-4">
@@ -115,6 +148,7 @@ export default function ProductForm() {
               onChange={(e) => setCostPrice(e.target.value)}
               className="border border-line rounded-md px-3 py-2 bg-white"
             />
+            {fieldError('costPrice')}
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Sell price (₹)</span>
@@ -126,6 +160,7 @@ export default function ProductForm() {
               onChange={(e) => setSellPrice(e.target.value)}
               className="border border-line rounded-md px-3 py-2 bg-white"
             />
+            {fieldError('sellPrice')}
           </label>
         </div>
 
@@ -137,20 +172,7 @@ export default function ProductForm() {
             placeholder="e.g. Rakhi 2026 — leave blank for year-round items like jewelry"
             className="border border-line rounded-md px-3 py-2 bg-white"
           />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Low stock warning at</span>
-          <input
-            type="number"
-            min="0"
-            value={lowStockThreshold}
-            onChange={(e) => setLowStockThreshold(e.target.value)}
-            className="border border-line rounded-md px-3 py-2 bg-white w-32"
-          />
-          <span className="text-xs text-ink/50">
-            Flags this product as low stock at or below this quantity.
-          </span>
+          {fieldError('seasonTag')}
         </label>
 
         {isEdit && (
@@ -164,8 +186,6 @@ export default function ProductForm() {
             Save the product first, then add photos on its detail page.
           </p>
         )}
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           type="submit"

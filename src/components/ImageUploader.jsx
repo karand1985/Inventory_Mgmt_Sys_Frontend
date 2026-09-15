@@ -1,46 +1,84 @@
 import React, { useRef, useState } from 'react';
-import { api } from '../api/client';
+import { api } from '../api';
+import { useToast } from '../context/ToastContext';
 
 /**
- * Multi-photo upload with drag-and-drop reordering. The first image
- * (index 0) is treated as the cover photo shown in product grids.
- * Reordering updates sort_order on the backend via api.images.reorder.
+ * Multi-photo uploader for a product.
+ *
+ *  - Uploads go to POST /products/{id}/images/upload (Cloudinary) with optional
+ *    comma-separated tags applied to every file in the batch.
+ *  - There is no bulk "reorder" endpoint; ordering is persisted per-image via
+ *    PUT /products/{id}/images/{imageId} by swapping adjacent sortOrder values.
+ *  - The first image (index 0) is treated as the cover photo.
  */
 export default function ImageUploader({ productId, images, onChange }) {
-  const [dragIndex, setDragIndex] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [busyId, setBusyId] = useState(null);
   const fileInputRef = useRef(null);
+  const { error: toastError, success } = useToast();
 
   async function handleFiles(fileList) {
     setUploading(true);
     try {
       const files = Array.from(fileList);
+      const tags = tagInput.trim() || undefined;
       const uploaded = [];
-      for (const file of files) {
-        // Uploaded one at a time to keep upload progress simple; Cloudinary
-        // itself supports batching if this needs to be faster later.
-        const img = await api.images.upload(productId, file);
+      for (let i = 0; i < files.length; i++) {
+        // Uploaded one at a time to keep progress simple; Cloudinary supports
+        // batching if this needs to be faster later. sortOrder appends to the end.
+        const img = await api.images.upload(productId, files[i], {
+          sortOrder: images.length + i,
+          tags,
+        });
         uploaded.push(img);
       }
       onChange([...images, ...uploaded]);
+      setTagInput('');
+      success(`Uploaded ${uploaded.length} photo${uploaded.length === 1 ? '' : 's'}.`);
+    } catch (err) {
+      toastError(err.message || 'Upload failed.');
     } finally {
       setUploading(false);
     }
   }
 
-  function handleDrop(targetIndex) {
-    if (dragIndex === null || dragIndex === targetIndex) return;
+  // Move an image one slot left/right and persist the swapped sortOrder values.
+  async function move(index, dir) {
+    const target = index + dir;
+    if (target < 0 || target >= images.length) return;
     const reordered = [...images];
-    const [moved] = reordered.splice(dragIndex, 1);
-    reordered.splice(targetIndex, 0, moved);
-    setDragIndex(null);
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(target, 0, moved);
+    // Optimistic UI update.
     onChange(reordered);
-    api.images.reorder(productId, reordered.map((img) => img.id));
+    setBusyId(moved.id);
+    try {
+      // Persist new positions for the two affected images.
+      const a = reordered[index];
+      const b = reordered[target];
+      await Promise.all([
+        api.images.update(productId, a.id, { sortOrder: index }),
+        api.images.update(productId, b.id, { sortOrder: target }),
+      ]);
+    } catch (err) {
+      toastError(err.message || 'Could not save the new order.');
+      onChange(images); // revert on failure
+    } finally {
+      setBusyId(null);
+    }
   }
 
   async function handleRemove(image) {
-    await api.images.remove(productId, image.id);
-    onChange(images.filter((img) => img.id !== image.id));
+    setBusyId(image.id);
+    try {
+      await api.images.remove(productId, image.id);
+      onChange(images.filter((img) => img.id !== image.id));
+    } catch (err) {
+      toastError(err.message || 'Could not delete this photo.');
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -49,11 +87,7 @@ export default function ImageUploader({ productId, images, onChange }) {
         {images.map((img, index) => (
           <div
             key={img.id}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => handleDrop(index)}
-            className="relative w-24 h-24 rounded-md overflow-hidden border-2 border-line cursor-move group"
+            className="relative w-24 h-24 rounded-md overflow-hidden border-2 border-line group"
           >
             <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
             {index === 0 && (
@@ -64,10 +98,32 @@ export default function ImageUploader({ productId, images, onChange }) {
             <button
               type="button"
               onClick={() => handleRemove(img)}
-              className="absolute top-1 right-1 bg-black/70 text-white text-xs w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              disabled={busyId === img.id}
+              className="absolute top-1 right-1 bg-black/70 text-white text-xs w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
             >
               ×
             </button>
+            {/* Reorder controls — persisted per-image (no bulk endpoint). */}
+            <div className="absolute bottom-1 left-1 right-1 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={() => move(index, -1)}
+                disabled={index === 0 || busyId === img.id}
+                className="bg-black/70 text-white text-xs w-5 h-5 rounded disabled:opacity-30"
+                aria-label="Move left"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={() => move(index, 1)}
+                disabled={index === images.length - 1 || busyId === img.id}
+                className="bg-black/70 text-white text-xs w-5 h-5 rounded disabled:opacity-30"
+                aria-label="Move right"
+              >
+                ›
+              </button>
+            </div>
           </div>
         ))}
 
@@ -88,8 +144,23 @@ export default function ImageUploader({ productId, images, onChange }) {
           onChange={(e) => e.target.files.length && handleFiles(e.target.files)}
         />
       </div>
+
+      <label className="flex flex-col gap-1 mb-2">
+        <span className="text-xs font-medium text-ink/70">
+          Tags for next upload (comma-separated)
+        </span>
+        <input
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          placeholder="e.g. rakhi, red, handmade"
+          className="border border-line rounded-md px-3 py-2 bg-white text-sm max-w-sm"
+        />
+      </label>
+
       {images.length > 1 && (
-        <p className="text-xs text-ink/50">Drag photos to reorder. The first one is the cover photo.</p>
+        <p className="text-xs text-ink/50">
+          Use ‹ › to reorder. The first photo is the cover.
+        </p>
       )}
     </div>
   );

@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
-import { api } from '../api/client';
+import { api } from '../api';
 
 const TODAY = () => new Date().toISOString().slice(0, 10);
 
+// Three movement types per the API. IN adds stock; SOLD/OUT remove it. Only
+// SOLD feeds the dashboard sales metrics, so it's the default for a sale.
+const TYPES = [
+  { value: 'IN', label: 'Stock in' },
+  { value: 'SOLD', label: 'Sold' },
+  { value: 'OUT', label: 'Out' },
+];
+
 export default function StockLogForm({ product, onLogged }) {
-  const [changeType, setChangeType] = useState('OUT');
+  const [changeType, setChangeType] = useState('SOLD');
   const [quantity, setQuantity] = useState(1);
   // Defaults to the product's listed sell price, but is editable — most
   // sales don't get haggled, so this keeps the common case a single tap.
@@ -14,6 +22,9 @@ export default function StockLogForm({ product, onLogged }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // Unit price only applies to stock leaving as a sale.
+  const showUnitPrice = changeType === 'SOLD' || changeType === 'OUT';
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
@@ -22,9 +33,9 @@ export default function StockLogForm({ product, onLogged }) {
       const entry = await api.stockLog.log(product.id, {
         changeType,
         quantity: Number(quantity),
-        unitPrice: changeType === 'IN' ? null : unitPrice === '' ? null : Number(unitPrice),
+        unitPrice: !showUnitPrice ? null : unitPrice === '' ? null : Number(unitPrice),
         note: note || null,
-        eventDate
+        eventDate,
       });
       onLogged(entry);
       setQuantity(1);
@@ -39,18 +50,18 @@ export default function StockLogForm({ product, onLogged }) {
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-line rounded-lg p-4 flex flex-col gap-3">
       <div className="flex gap-2">
-        {['IN', 'OUT'].map((type) => (
+        {TYPES.map((type) => (
           <button
-            key={type}
+            key={type.value}
             type="button"
-            onClick={() => setChangeType(type)}
+            onClick={() => setChangeType(type.value)}
             className={`flex-1 text-sm font-medium py-2 rounded-md border ${
-              changeType === type
+              changeType === type.value
                 ? 'bg-ink text-white border-ink'
                 : 'border-line text-ink/60'
             }`}
           >
-            {type === 'IN' ? 'Stock in' : 'Sold'}
+            {type.label}
           </button>
         ))}
       </div>
@@ -68,7 +79,7 @@ export default function StockLogForm({ product, onLogged }) {
           />
         </label>
 
-        {changeType !== 'IN' && (
+        {showUnitPrice && (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-ink/70">Actual sale price (₹)</span>
             <input

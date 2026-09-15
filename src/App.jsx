@@ -12,6 +12,10 @@ import BusinessSelect from './pages/BusinessSelect';
 import ProductList from './pages/ProductList';
 import ProductForm from './pages/ProductForm';
 import ProductDetail from './pages/ProductDetail';
+import ImageSearch from './pages/ImageSearch';
+import CatalogSettings from './pages/CatalogSettings';
+import ChangePassword from './pages/ChangePassword';
+import Users from './pages/Users';
 
 function Home() {
   const { user, isSuperAdmin } = useAuth();
@@ -71,6 +75,38 @@ function AppRoutes() {
           element={
             <ProtectedRoute requireWrite>
               <ProductForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/images"
+          element={
+            <ProtectedRoute>
+              <ImageSearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/catalog"
+          element={
+            <ProtectedRoute requireWrite>
+              <CatalogSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute requireSuperAdmin>
+              <Users />
             </ProtectedRoute>
           }
         />

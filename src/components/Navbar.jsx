@@ -13,7 +13,7 @@ const BADGE_CLASSES = {
 
 export default function Navbar() {
   const { businesses, selected, setSelectedId } = useBusiness();
-  const { user, isViewer, logout } = useAuth();
+  const { user, isViewer, canWrite, isSuperAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const theme = themeFor(selected?.name);
 
@@ -38,6 +38,21 @@ export default function Navbar() {
             <Link to="/products" className="text-ink/70 hover:text-ink">
               Products
             </Link>
+            <Link to="/images" className="text-ink/70 hover:text-ink">
+              Images
+            </Link>
+            {/* Catalog admin (businesses/categories) — write-capable roles only. */}
+            {canWrite && (
+              <Link to="/catalog" className="text-ink/70 hover:text-ink">
+                Catalog
+              </Link>
+            )}
+            {/* User administration — SUPER_ADMIN only. */}
+            {isSuperAdmin && (
+              <Link to="/users" className="text-ink/70 hover:text-ink">
+                Users
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -77,6 +92,12 @@ export default function Navbar() {
               {user.email}
               {isViewer && <span className="text-ink/40"> · view only</span>}
             </span>
+            <Link
+              to="/change-password"
+              className="text-ink/50 hover:text-ink underline hidden sm:inline"
+            >
+              Password
+            </Link>
             <button onClick={handleLogout} className="text-ink/50 hover:text-ink underline">
               Log out
             </button>

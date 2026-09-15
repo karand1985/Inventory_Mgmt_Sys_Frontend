@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api/client';
+import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import ImageUploader from '../components/ImageUploader';
 import StockLogForm from '../components/StockLogForm';
+
+// Mirror the dashboard's low-stock threshold (backend has no per-product value).
+const LOW_STOCK_AT = 5;
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isViewer } = useAuth();
+  const { canWrite } = useAuth();
+  const { success, error: toastError } = useToast();
   const [product, setProduct] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +25,7 @@ export default function ProductDetail() {
         setProduct(p);
         setHistory(h);
       })
+      .catch((err) => toastError(err.message))
       .finally(() => setLoading(false));
   }
 
@@ -27,23 +33,33 @@ export default function ProductDetail() {
 
   async function handleDelete() {
     if (!confirm(`Delete "${product.name}"? This can't be undone.`)) return;
-    await api.products.remove(id);
-    navigate('/products');
+    try {
+      await api.products.remove(id);
+      success('Product deleted.');
+      navigate('/products');
+    } catch (err) {
+      toastError(err.message);
+    }
   }
 
   if (loading || !product) return <p className="text-center mt-16 text-ink/60">Loading…</p>;
 
-  const lowStock = product.currentQuantity <= 3;
+  const lowStock = (product.currentQuantity ?? 0) <= LOW_STOCK_AT;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <h1 className="text-xl font-semibold">{product.name}</h1>
-          <p className="text-sm text-ink/60">{product.category?.name}</p>
+          <p className="text-sm text-ink/60">
+            {product.categoryName}
+            {product.productCode && (
+              <span className="text-ink/40"> · {product.productCode}</span>
+            )}
+          </p>
         </div>
         <div className="flex gap-2 shrink-0">
-          {!isViewer && (
+          {canWrite && (
             <>
               <Link
                 to={`/products/${id}/edit`}
@@ -66,7 +82,7 @@ export default function ProductDetail() {
         <div className="bg-white border border-line rounded-lg p-3">
           <div className="text-xs text-ink/50">Current stock</div>
           <div className={`text-lg font-semibold ${lowStock ? 'text-red-600' : ''}`}>
-            {product.currentQuantity}
+            {product.currentQuantity ?? 0}
           </div>
         </div>
         <div className="bg-white border border-line rounded-lg p-3">
@@ -81,7 +97,7 @@ export default function ProductDetail() {
 
       <div className="mb-6">
         <span className="text-sm font-medium block mb-2">Photos</span>
-        {isViewer ? (
+        {!canWrite ? (
           <div className="flex flex-wrap gap-3">
             {(product.images ?? []).map((img) => (
               <img
@@ -105,7 +121,7 @@ export default function ProductDetail() {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
-        {!isViewer && (
+        {canWrite && (
           <div>
             <h2 className="text-sm font-medium mb-2">Log stock movement</h2>
             <StockLogForm product={product} onLogged={refresh} />
@@ -129,6 +145,7 @@ export default function ProductDetail() {
                         {h.changeType === 'IN' ? '+' : '−'}
                         {h.quantity}
                       </span>
+                      <span className="text-ink/40 text-xs"> · {h.changeType}</span>
                       {h.unitPrice != null && (
                         <span className="text-ink/50"> at ₹{h.unitPrice}</span>
                       )}
