@@ -11,7 +11,10 @@ export default defineConfig({
   build: {
     // Output straight into the Spring Boot static resources folder so the
     // backend serves this build directly, per the single-jar hosting decision.
-    outDir: '../inventory-system/src/main/resources/static',
+    // Same developer owns both repos here, so the SPA is bundled into the
+    // backend jar (unlike ServiceRight-UI, which is owned by a separate FE dev
+    // and therefore deployed independently behind its own Nginx).
+    outDir: '../Inventory_Mgmt_Sys_Backend/src/main/resources/static',
     emptyOutDir: true
   }
 })
