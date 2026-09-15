@@ -1,10 +1,26 @@
 const BASE = '/api';
 
+function getToken() {
+  const raw = localStorage.getItem('inventory_auth');
+  return raw ? JSON.parse(raw).token : null;
+}
+
 async function request(path, options = {}) {
+  const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
     ...options
   });
+  if (res.status === 401) {
+    // Session expired or was never valid — clear it and send the user back
+    // to login rather than surfacing a confusing API error.
+    localStorage.removeItem('inventory_auth');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`${res.status} ${res.statusText}: ${text}`);
@@ -33,6 +49,12 @@ export const api = {
     update: (id, data) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id) => request(`/products/${id}`, { method: 'DELETE' })
   },
+  dashboard: {
+    get: (businessId) => {
+      const params = businessId ? `?businessId=${businessId}` : '';
+      return request(`/dashboard${params}`);
+    }
+  },
   stockLog: {
     history: (productId) => request(`/products/${productId}/stock-log`),
     log: (productId, data) =>
@@ -45,6 +67,7 @@ export const api = {
       formData.append('file', file);
       return fetch(`${BASE}/products/${productId}/images`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${getToken()}` },
         body: formData
       }).then((res) => {
         if (!res.ok) throw new Error(`Upload failed: ${res.status}`);

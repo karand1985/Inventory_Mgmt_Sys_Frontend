@@ -19,6 +19,7 @@ export default function ProductForm() {
   const [costPrice, setCostPrice] = useState('');
   const [sellPrice, setSellPrice] = useState('');
   const [seasonTag, setSeasonTag] = useState('');
+  const [lowStockThreshold, setLowStockThreshold] = useState(3);
   const [images, setImages] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +37,7 @@ export default function ProductForm() {
       setCostPrice(p.costPrice ?? '');
       setSellPrice(p.sellPrice ?? '');
       setSeasonTag(p.seasonTag ?? '');
+      setLowStockThreshold(p.lowStockThreshold ?? 3);
       setImages(p.images ?? []);
     });
   }, [id, isEdit]);
@@ -51,7 +53,8 @@ export default function ProductForm() {
         name,
         costPrice: costPrice === '' ? null : Number(costPrice),
         sellPrice: sellPrice === '' ? null : Number(sellPrice),
-        seasonTag: seasonTag || null
+        seasonTag: seasonTag || null,
+        lowStockThreshold: Number(lowStockThreshold)
       };
       const saved = isEdit ? await api.products.update(id, payload) : await api.products.create(payload);
       navigate(`/products/${saved.id}`);
@@ -134,6 +137,20 @@ export default function ProductForm() {
             placeholder="e.g. Rakhi 2026 — leave blank for year-round items like jewelry"
             className="border border-line rounded-md px-3 py-2 bg-white"
           />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Low stock warning at</span>
+          <input
+            type="number"
+            min="0"
+            value={lowStockThreshold}
+            onChange={(e) => setLowStockThreshold(e.target.value)}
+            className="border border-line rounded-md px-3 py-2 bg-white w-32"
+          />
+          <span className="text-xs text-ink/50">
+            Flags this product as low stock at or below this quantity.
+          </span>
         </label>
 
         {isEdit && (

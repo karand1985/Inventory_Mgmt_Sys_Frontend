@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useBusiness, themeFor } from '../context/BusinessContext';
+import { useAuth } from '../context/AuthContext';
 
 const ACCENT_TEXT = { yogart: 'text-yogart', mk: 'text-mk' };
 const ACCENT_BG = { yogart: 'bg-yogart', mk: 'bg-mk' };
 
 export default function ProductList() {
   const { selected } = useBusiness();
+  const { isViewer } = useAuth();
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState('');
   const [products, setProducts] = useState([]);
@@ -46,12 +48,14 @@ export default function ProductList() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h1 className="text-xl font-semibold">{selected.name} — Stock</h1>
-        <Link
-          to="/products/new"
-          className={`text-white text-sm font-medium px-4 py-2 rounded-md ${ACCENT_BG[theme.accent]}`}
-        >
-          Add product
-        </Link>
+        {!isViewer && (
+          <Link
+            to="/products/new"
+            className={`text-white text-sm font-medium px-4 py-2 rounded-md ${ACCENT_BG[theme.accent]}`}
+          >
+            Add product
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 mb-5">
@@ -86,7 +90,7 @@ export default function ProductList() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filtered.map((p) => {
             const cover = p.images?.[0]?.imageUrl;
-            const lowStock = p.currentQuantity <= 3;
+            const lowStock = p.currentQuantity <= (p.lowStockThreshold ?? 3);
             return (
               <Link
                 key={p.id}
