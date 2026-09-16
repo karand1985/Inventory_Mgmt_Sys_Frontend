@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useBusiness, themeFor } from '../context/BusinessContext';
 import { useAuth } from '../context/AuthContext';
+import BusinessSwitcher from './BusinessSwitcher';
 
 // Tailwind's JIT compiler can't detect dynamically interpolated class names
 // (e.g. `bg-${accent}`), so every accent class used anywhere in the app must
@@ -12,12 +13,18 @@ const BADGE_CLASSES = {
 };
 
 export default function Navbar() {
-  const { businesses, selected, setSelectedId } = useBusiness();
+  const { businesses, selected } = useBusiness();
   const { user, isViewer, canWrite, isSuperAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const theme = themeFor(selected?.name);
 
   if (!user) return null;
+
+  // Business-scoped screens (Overview/Products/Images/Categories) can't render
+  // without a selected business, so we hide those links until one is chosen.
+  // Global SUPER_ADMIN links (Businesses/Users) stay visible so an admin with
+  // no selection yet can still create or pick a business.
+  const hasBusiness = Boolean(selected);
 
   function handleLogout() {
     logout();
@@ -32,19 +39,30 @@ export default function Navbar() {
             Inventory
           </Link>
           <nav className="hidden sm:flex gap-3 text-sm">
-            <Link to="/dashboard" className="text-ink/70 hover:text-ink">
-              Overview
-            </Link>
-            <Link to="/products" className="text-ink/70 hover:text-ink">
-              Products
-            </Link>
-            <Link to="/images" className="text-ink/70 hover:text-ink">
-              Images
-            </Link>
-            {/* Catalog admin (businesses/categories) — write-capable roles only. */}
-            {canWrite && (
-              <Link to="/catalog" className="text-ink/70 hover:text-ink">
-                Catalog
+            {/* Business-scoped links — only when a business is selected. */}
+            {hasBusiness && (
+              <>
+                <Link to="/dashboard" className="text-ink/70 hover:text-ink">
+                  Overview
+                </Link>
+                <Link to="/products" className="text-ink/70 hover:text-ink">
+                  Products
+                </Link>
+                <Link to="/images" className="text-ink/70 hover:text-ink">
+                  Images
+                </Link>
+                {/* Category admin — scoped to the selected business; write roles only. */}
+                {canWrite && (
+                  <Link to="/catalog" className="text-ink/70 hover:text-ink">
+                    Categories
+                  </Link>
+                )}
+              </>
+            )}
+            {/* Business admin — SUPER_ADMIN only. */}
+            {isSuperAdmin && (
+              <Link to="/businesses" className="text-ink/70 hover:text-ink">
+                Businesses
               </Link>
             )}
             {/* User administration — SUPER_ADMIN only. */}
@@ -58,25 +76,12 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           {/* Only shown when the account has more than one business to switch
-              between — SUPER_ADMIN today. OWNER/VIEWER never see this. */}
+              between — SUPER_ADMIN today. OWNER/VIEWER never see this. Switching
+              here changes business without logging out; we route to the
+              dashboard so the newly-selected business's data loads fresh. The
+              same dropdown is reused on the /select-business page. */}
           {businesses.length > 1 && (
-            <select
-              className="border border-line rounded-md px-3 py-1.5 bg-white text-sm"
-              value={selected?.id || ''}
-              onChange={(e) => {
-                setSelectedId(e.target.value);
-                navigate('/products');
-              }}
-            >
-              <option value="" disabled>
-                Choose a business
-              </option>
-              {businesses.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+            <BusinessSwitcher align="right" onSelected={() => navigate('/dashboard')} />
           )}
 
           {selected && (

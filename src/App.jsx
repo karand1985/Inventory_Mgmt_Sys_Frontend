@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { BusinessProvider } from './context/BusinessContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ConfirmProvider } from './context/ConfirmContext';
+import { PromptProvider } from './context/PromptContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalHandlers from './components/GlobalHandlers';
 import Navbar from './components/Navbar';
@@ -14,20 +16,17 @@ import ProductForm from './pages/ProductForm';
 import ProductDetail from './pages/ProductDetail';
 import ImageSearch from './pages/ImageSearch';
 import CatalogSettings from './pages/CatalogSettings';
+import Businesses from './pages/Businesses';
 import ChangePassword from './pages/ChangePassword';
 import Users from './pages/Users';
 
 function Home() {
-  const { user, isSuperAdmin } = useAuth();
+  const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  // SUPER_ADMIN lands on the business picker (spans both businesses);
-  // OWNER/VIEWER go straight to their own dashboard.
-  return isSuperAdmin ? <BusinessSelectGate /> : <Navigate to="/dashboard" replace />;
-}
-
-// SUPER_ADMIN still needs to pick a business before most screens make sense.
-function BusinessSelectGate() {
-  return <BusinessSelect />;
+  // Everyone lands on the dashboard. The dashboard route requires a selected
+  // business, so SUPER_ADMIN (multi-business) is bounced to the picker first,
+  // while OWNER/VIEWER (single business) auto-select and go straight through.
+  return <Navigate to="/dashboard" replace />;
 }
 
 function AppRoutes() {
@@ -39,9 +38,17 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
         <Route
-          path="/dashboard"
+          path="/select-business"
           element={
             <ProtectedRoute>
+              <BusinessSelect />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute requireBusiness>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -49,7 +56,7 @@ function AppRoutes() {
         <Route
           path="/products"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireBusiness>
               <ProductList />
             </ProtectedRoute>
           }
@@ -57,7 +64,7 @@ function AppRoutes() {
         <Route
           path="/products/new"
           element={
-            <ProtectedRoute requireWrite>
+            <ProtectedRoute requireWrite requireBusiness>
               <ProductForm />
             </ProtectedRoute>
           }
@@ -65,7 +72,7 @@ function AppRoutes() {
         <Route
           path="/products/:id"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireBusiness>
               <ProductDetail />
             </ProtectedRoute>
           }
@@ -73,7 +80,7 @@ function AppRoutes() {
         <Route
           path="/products/:id/edit"
           element={
-            <ProtectedRoute requireWrite>
+            <ProtectedRoute requireWrite requireBusiness>
               <ProductForm />
             </ProtectedRoute>
           }
@@ -81,7 +88,7 @@ function AppRoutes() {
         <Route
           path="/images"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireBusiness>
               <ImageSearch />
             </ProtectedRoute>
           }
@@ -89,8 +96,16 @@ function AppRoutes() {
         <Route
           path="/catalog"
           element={
-            <ProtectedRoute requireWrite>
+            <ProtectedRoute requireWrite requireBusiness>
               <CatalogSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/businesses"
+          element={
+            <ProtectedRoute requireSuperAdmin>
+              <Businesses />
             </ProtectedRoute>
           }
         />
@@ -118,11 +133,15 @@ function AppRoutes() {
 export default function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <BusinessProvider>
-          <AppRoutes />
-        </BusinessProvider>
-      </AuthProvider>
+      <ConfirmProvider>
+        <PromptProvider>
+          <AuthProvider>
+            <BusinessProvider>
+              <AppRoutes />
+            </BusinessProvider>
+          </AuthProvider>
+        </PromptProvider>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }

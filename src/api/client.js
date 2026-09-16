@@ -185,7 +185,14 @@ export const api = {
       const form = new FormData();
       form.append('file', file);
       if (sortOrder != null) form.append('sortOrder', String(sortOrder));
-      if (tags) form.append('tags', Array.isArray(tags) ? tags.join(',') : tags);
+      // Send each tag as its own `tags` field so it binds to List<String>
+      // (multipart does not comma-split a single value).
+      if (tags) {
+        (Array.isArray(tags) ? tags : String(tags).split(','))
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .forEach((t) => form.append('tags', t));
+      }
       return http.upload(`/products/${productId}/images/upload`, form);
     },
     remove: (productId, imageId) => http.del(`/products/${productId}/images/${imageId}`),

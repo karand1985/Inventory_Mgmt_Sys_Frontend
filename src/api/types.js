@@ -29,17 +29,34 @@
  */
 
 /**
+ * Audit metadata stamped on every entity by Spring Data JPA auditing.
+ * @typedef {Object} AuditFields
+ * @property {string} [createdAt]  ISO date-time of insert.
+ * @property {string} [updatedAt]  ISO date-time of last update.
+ * @property {string} [createdBy]  Email of the creating user (or "system").
+ * @property {string} [updatedBy]  Email of the last-updating user (or "system").
+ */
+
+/**
  * @typedef {Object} User
  * @property {number} id
  * @property {string} email
  * @property {'SUPER_ADMIN'|'OWNER'|'VIEWER'} role
  * @property {boolean} enabled
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**
  * @typedef {Object} Business
  * @property {number} id
  * @property {string} name
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**
@@ -47,6 +64,15 @@
  * @property {number} id
  * @property {number} businessId
  * @property {string} name
+ * @property {number} [parentId]     Null/absent for top-level categories.
+ * @property {string} [parentName]   Name of the parent category, when nested.
+ * @property {boolean} [hasChildren] True when this node has sub-categories (so it
+ *                                   cannot directly hold products — products
+ *                                   attach to leaf categories only).
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**
@@ -59,6 +85,10 @@
  * @property {number} [costPrice]
  * @property {number} [sellPrice]
  * @property {string} [seasonTag]
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**
@@ -68,6 +98,10 @@
  * @property {string} imageUrl
  * @property {number} [sortOrder]
  * @property {string[]} [tags]
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**
@@ -79,6 +113,10 @@
  * @property {number} [unitPrice]
  * @property {string} [note]
  * @property {string} eventDate  ISO date (yyyy-MM-dd).
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [createdBy]
+ * @property {string} [updatedBy]
  */
 
 /**

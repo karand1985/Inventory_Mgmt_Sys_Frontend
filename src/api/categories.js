@@ -13,7 +13,8 @@ export function list(businessId) {
 
 /**
  * POST /categories (OWNER/SUPER_ADMIN).
- * @param {{ businessId: number, name: string }} data
+ * Pass `parentId` to create a sub-category under an existing top-level category.
+ * @param {{ businessId: number, name: string, parentId?: number|null }} data
  * @returns {Promise<import('./types').Category>}
  */
 export function create(data) {
@@ -23,7 +24,7 @@ export function create(data) {
 /**
  * PUT /categories/{id} (OWNER/SUPER_ADMIN).
  * @param {number} id
- * @param {{ businessId: number, name: string }} data
+ * @param {{ businessId: number, name: string, parentId?: number|null }} data
  * @returns {Promise<import('./types').Category>}
  */
 export function update(id, data) {

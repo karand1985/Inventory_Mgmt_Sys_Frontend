@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useBusiness } from '../context/BusinessContext';
 import { useToast } from '../context/ToastContext';
+import AuditMeta from '../components/AuditMeta';
 
 const ROLES = ['SUPER_ADMIN', 'OWNER', 'VIEWER'];
 
@@ -180,6 +181,7 @@ export default function Users() {
                   {u.role}
                   {!u.enabled && <span className="text-red-600"> · disabled</span>}
                 </div>
+                <AuditMeta entity={u} variant="inline" className="mt-1" />
               </div>
               <button
                 onClick={() => toggleStatus(u)}

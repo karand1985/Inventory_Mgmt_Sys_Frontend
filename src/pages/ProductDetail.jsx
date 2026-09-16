@@ -3,8 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 import ImageUploader from '../components/ImageUploader';
+import Lightbox from '../components/Lightbox';
 import StockLogForm from '../components/StockLogForm';
+import AuditMeta from '../components/AuditMeta';
 
 // Mirror the dashboard's low-stock threshold (backend has no per-product value).
 const LOW_STOCK_AT = 5;
@@ -14,9 +17,11 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { canWrite } = useAuth();
   const { success, error: toastError } = useToast();
+  const confirm = useConfirm();
   const [product, setProduct] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   function refresh() {
     setLoading(true);
@@ -32,7 +37,12 @@ export default function ProductDetail() {
   useEffect(refresh, [id]);
 
   async function handleDelete() {
-    if (!confirm(`Delete "${product.name}"? This can't be undone.`)) return;
+    const ok = await confirm({
+      title: 'Delete product',
+      message: `Delete "${product.name || product.productCode}"? This can't be undone.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await api.products.remove(id);
       success('Product deleted.');
@@ -50,13 +60,18 @@ export default function ProductDetail() {
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-xl font-semibold">{product.name}</h1>
+          <h1 className="text-xl font-semibold">{product.name || product.productCode}</h1>
           <p className="text-sm text-ink/60">
             {product.categoryName}
             {product.productCode && (
               <span className="text-ink/40"> · {product.productCode}</span>
             )}
           </p>
+          {product.seasonTag && (
+            <span className="inline-block mt-2 text-xs font-medium bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5">
+              {product.seasonTag}
+            </span>
+          )}
         </div>
         <div className="flex gap-2 shrink-0">
           {canWrite && (
@@ -100,12 +115,28 @@ export default function ProductDetail() {
         {!canWrite ? (
           <div className="flex flex-wrap gap-3">
             {(product.images ?? []).map((img) => (
-              <img
-                key={img.id}
-                src={img.imageUrl}
-                alt=""
-                className="w-24 h-24 rounded-md object-cover border-2 border-line"
-              />
+              <div key={img.id} className="w-24">
+                <img
+                  src={img.imageUrl}
+                  alt=""
+                  onClick={() =>
+                    setLightboxIndex((product.images ?? []).findIndex((i) => i.id === img.id))
+                  }
+                  className="w-24 h-24 rounded-md object-cover border-2 border-line cursor-zoom-in"
+                />
+                {(img.tags ?? []).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {img.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="text-[10px] bg-paper border border-line text-ink/70 rounded-full px-1.5 py-0.5"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             {(product.images ?? []).length === 0 && (
               <p className="text-sm text-ink/50">No photos yet.</p>
@@ -116,9 +147,17 @@ export default function ProductDetail() {
             productId={id}
             images={product.images ?? []}
             onChange={(images) => setProduct({ ...product, images })}
+            onView={(idx) => setLightboxIndex(idx)}
           />
         )}
       </div>
+
+      <Lightbox
+        images={product.images ?? []}
+        index={lightboxIndex}
+        onIndex={setLightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+      />
 
       <div className="grid sm:grid-cols-2 gap-6">
         {canWrite && (
@@ -159,6 +198,8 @@ export default function ProductDetail() {
           )}
         </div>
       </div>
+
+      <AuditMeta entity={product} />
     </div>
   );
 }

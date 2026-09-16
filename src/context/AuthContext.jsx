@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { AUTH_STORAGE_KEY as STORAGE_KEY } from '../config';
 import { http } from '../api/client';
 
@@ -25,30 +25,36 @@ export function AuthProvider({ children }) {
     return raw ? JSON.parse(raw) : null;
   });
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  // Persist synchronously so the HTTP client (which reads the token from
+  // localStorage) sees it immediately. Relying on a useEffect would defer the
+  // write until after commit, and React runs child effects before parent
+  // effects — so a protected page's fetch effect can fire BEFORE this provider
+  // persists, sending the very first request with no Authorization header (401).
+  function persistSession(next) {
+    if (next) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [user]);
+    setUser(next);
+  }
 
   async function login(email, password) {
     const data = await loginRequest(email, password);
-    setUser(data);
+    persistSession(data);
     return data;
   }
 
   // The backend is stateless (JWT); there's no server logout endpoint. Logging
   // out simply forgets the token locally.
   function logout() {
-    setUser(null);
+    persistSession(null);
   }
 
   // Clears React auth state without any network call. Used by the global 401
   // handler (the HTTP client already wipes localStorage before emitting).
   function clearSession() {
-    setUser(null);
+    persistSession(null);
   }
 
   const role = user?.role;

@@ -24,8 +24,21 @@ export function upload(productId, file, { sortOrder, tags } = {}) {
   const form = new FormData();
   form.append('file', file);
   if (sortOrder != null) form.append('sortOrder', String(sortOrder));
-  if (tags != null) form.append('tags', Array.isArray(tags) ? tags.join(',') : tags);
+  // The backend binds `tags` as List<String>. Multipart form-data does NOT split
+  // a single comma-joined value, so each tag must be sent as its own field
+  // (tags=a, tags=b, ...) — mirroring the working Postman request.
+  appendTags(form, tags);
   return http.upload(`/products/${productId}/images/upload`, form);
+}
+
+/** Appends each tag as a repeated `tags` field (array or comma-separated string). */
+function appendTags(form, tags) {
+  if (tags == null) return;
+  const list = Array.isArray(tags) ? tags : String(tags).split(',');
+  list
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .forEach((t) => form.append('tags', t));
 }
 
 /**

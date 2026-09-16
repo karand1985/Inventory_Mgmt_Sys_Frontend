@@ -6,9 +6,9 @@ const TODAY = () => new Date().toISOString().slice(0, 10);
 // Three movement types per the API. IN adds stock; SOLD/OUT remove it. Only
 // SOLD feeds the dashboard sales metrics, so it's the default for a sale.
 const TYPES = [
-  { value: 'IN', label: 'Stock in' },
-  { value: 'SOLD', label: 'Sold' },
-  { value: 'OUT', label: 'Out' },
+  { value: 'IN', label: 'Stock in', hint: 'Adds stock (new/restocked inventory).' },
+  { value: 'SOLD', label: 'Sold', hint: 'Sold to a customer — counts toward sales & revenue.' },
+  { value: 'OUT', label: 'Out', hint: 'Removed without a sale — damage, loss, gift, sample. Not revenue.' },
 ];
 
 export default function StockLogForm({ product, onLogged }) {
@@ -24,9 +24,23 @@ export default function StockLogForm({ product, onLogged }) {
 
   // Unit price only applies to stock leaving as a sale.
   const showUnitPrice = changeType === 'SOLD' || changeType === 'OUT';
+  // A SOLD/OUT movement removes stock; it can't take availability below zero.
+  const available = product.currentQuantity ?? 0;
+  const removing = changeType === 'SOLD' || changeType === 'OUT';
+  const activeHint = TYPES.find((t) => t.value === changeType)?.hint;
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Client-side oversell guard (backend also enforces this). Gives an
+    // instant, clear message instead of a round-trip 400.
+    if (removing && Number(quantity) > available) {
+      setError(
+        `Not enough stock. Only ${available} available, but you're trying to remove ${Number(quantity)}.`
+      );
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
@@ -66,9 +80,13 @@ export default function StockLogForm({ product, onLogged }) {
         ))}
       </div>
 
+      {activeHint && <p className="text-xs text-ink/50 -mt-1">{activeHint}</p>}
+
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink/70">Quantity</span>
+          <span className="text-xs font-medium text-ink/70">
+            Quantity {removing && <span className="text-ink/40">· {available} available</span>}
+          </span>
           <input
             type="number"
             min="1"
@@ -120,8 +138,8 @@ export default function StockLogForm({ product, onLogged }) {
 
       <button
         type="submit"
-        disabled={saving}
-        className="bg-ink text-white font-medium rounded-md px-4 py-2.5"
+        disabled={saving || (removing && Number(quantity) > available)}
+        className="bg-ink text-white font-medium rounded-md px-4 py-2.5 disabled:opacity-50"
       >
         {saving ? 'Logging…' : 'Log movement'}
       </button>

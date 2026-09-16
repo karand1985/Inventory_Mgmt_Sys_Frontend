@@ -66,11 +66,23 @@ export default function ProductList() {
   }
 
   const products = pageData?.content ?? [];
+  // Build a two-level view of the category list for the filter dropdown: each
+  // root category, immediately followed by its sub-categories (indented). The
+  // backend expands a selected parent to include all of its sub-categories, so
+  // choosing a parent here returns products from every sub-category beneath it.
+  const roots = categories.filter((c) => !c.parentId);
+  const childrenOf = (id) => categories.filter((c) => c.parentId === id);
   // Name search is applied client-side to the current page only. Server-side
   // name filtering isn't part of the API contract, so this narrows what's on
   // screen without claiming to search the whole catalog.
   const filtered = query
-    ? products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
+    ? products.filter((p) => {
+        const q = query.toLowerCase();
+        return (
+          (p.name || '').toLowerCase().includes(q) ||
+          (p.productCode || '').toLowerCase().includes(q)
+        );
+      })
     : products;
 
   return (
@@ -101,11 +113,23 @@ export default function ProductList() {
           className="border border-line rounded-md px-3 py-2 text-sm bg-white"
         >
           <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          {roots.map((root) => {
+            const subs = childrenOf(root.id);
+            return subs.length > 0 ? (
+              <optgroup key={root.id} label={root.name}>
+                <option value={root.id}>{root.name} — all</option>
+                {subs.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {'\u00A0\u00A0'}↳ {sub.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : (
+              <option key={root.id} value={root.id}>
+                {root.name}
+              </option>
+            );
+          })}
         </select>
       </div>
 
@@ -136,7 +160,7 @@ export default function ProductList() {
                   )}
                 </div>
                 <div className="p-3">
-                  <div className="font-medium text-sm truncate">{p.name}</div>
+                  <div className="font-medium text-sm truncate">{p.name || p.productCode}</div>
                   <div className="text-xs text-ink/40 truncate">{p.productCode}</div>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-sm text-ink/70">₹{p.sellPrice ?? '—'}</span>

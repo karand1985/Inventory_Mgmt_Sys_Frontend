@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api } from '../api';
 import { useAuth } from './AuthContext';
 
@@ -22,33 +22,58 @@ export function BusinessProvider({ children }) {
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) {
-      setBusinesses([]);
-      setLoading(false);
-      return;
-    }
+  // Fetches the roster the current account can see and reconciles the selection.
+  // Exposed as `refresh()` so screens that mutate businesses (create/rename/
+  // delete) can update the switcher live without a full page reload.
+  const refresh = useCallback(() => {
+    if (!token) return Promise.resolve([]);
     setLoading(true);
-    api.businesses
+    return api.businesses
       .list()
       .then((list) => {
         setBusinesses(list);
-        // OWNER/VIEWER only ever get one business back from the API — auto-select
-        // it so they never see an unnecessary business picker.
-        if (list.length === 1) setSelectedId(list[0].id);
+        setSelectedId((current) => {
+          // Auto-select when there's exactly one business (OWNER/VIEWER) so they
+          // never see an unnecessary picker.
+          if (list.length === 1) return list[0].id;
+          // Drop a stale/foreign persisted id (e.g. left over from another
+          // account) or one that was just deleted and is no longer in the roster.
+          if (current && !list.some((b) => String(b.id) === String(current))) {
+            return null;
+          }
+          return current;
+        });
+        return list;
       })
       .finally(() => setLoading(false));
   }, [token]);
 
   useEffect(() => {
+    if (!token) {
+      // Logged out: forget the roster. We deliberately keep the persisted
+      // selectedBusinessId so a returning user of the *same* account lands back
+      // on their last business; it's re-validated against the fresh list below.
+      setBusinesses([]);
+      setLoading(false);
+      return;
+    }
+    refresh();
+  }, [token, refresh]);
+
+  // Keep localStorage in lockstep with the selection — persist when set, and
+  // remove the key entirely when cleared so nothing stale lingers.
+  useEffect(() => {
     if (selectedId) localStorage.setItem('selectedBusinessId', selectedId);
+    else localStorage.removeItem('selectedBusinessId');
   }, [selectedId]);
 
   const selected = businesses.find((b) => String(b.id) === String(selectedId)) || null;
 
+  const clearSelection = () => setSelectedId(null);
+
   return (
     <BusinessContext.Provider
-      value={{ businesses, loading, selected, selectedId, setSelectedId }}
+      value={{ businesses, loading, selected, selectedId, setSelectedId, clearSelection, refresh }}
     >
       {children}
     </BusinessContext.Provider>
