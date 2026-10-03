@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useBusiness, themeFor } from '../context/BusinessContext';
 import { useAuth } from '../context/AuthContext';
 import BusinessSwitcher from './BusinessSwitcher';
@@ -11,6 +11,14 @@ const BADGE_CLASSES = {
   yogart: 'bg-yogart',
   mk: 'bg-mk'
 };
+
+// Shared styling for the top-nav links, with a glowing underline when active.
+function navClass({ isActive }) {
+  return [
+    'relative flex items-center gap-1.5 text-sm font-medium transition-colors',
+    isActive ? 'iv-nav-active' : 'text-ink/65 hover:text-ink'
+  ].join(' ');
+}
 
 export default function Navbar() {
   const { businesses, selected } = useBusiness();
@@ -32,44 +40,56 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-line bg-paper">
+    <header className="iv-glass sticky top-0 z-40 border-b border-line/70">
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="font-semibold text-lg tracking-tight">
-            Inventory
+        <div className="flex items-center gap-5">
+          <Link to="/" className="flex items-center gap-2">
+            <span
+              className="h-8 w-8 rounded-lg grid place-items-center text-white shadow-soft"
+              style={{ backgroundImage: 'linear-gradient(135deg, rgb(var(--iv-accent)), rgb(var(--iv-accent-dark)))' }}
+            >
+              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+            </span>
+            <span className="iv-display font-extrabold text-lg tracking-tight">Inventory</span>
           </Link>
-          <nav className="hidden sm:flex gap-3 text-sm">
+          <nav className="hidden sm:flex gap-5 text-sm">
             {/* Business-scoped links — only when a business is selected. */}
             {hasBusiness && (
               <>
-                <Link to="/dashboard" className="text-ink/70 hover:text-ink">
+                <NavLink to="/dashboard" className={navClass}>
+                  <span className="material-symbols-outlined text-[18px]">dashboard</span>
                   Overview
-                </Link>
-                <Link to="/products" className="text-ink/70 hover:text-ink">
+                </NavLink>
+                <NavLink to="/products" className={navClass}>
+                  <span className="material-symbols-outlined text-[18px]">inventory</span>
                   Products
-                </Link>
-                <Link to="/images" className="text-ink/70 hover:text-ink">
+                </NavLink>
+                <NavLink to="/images" className={navClass}>
+                  <span className="material-symbols-outlined text-[18px]">image</span>
                   Images
-                </Link>
+                </NavLink>
                 {/* Category admin — scoped to the selected business; write roles only. */}
                 {canWrite && (
-                  <Link to="/catalog" className="text-ink/70 hover:text-ink">
+                  <NavLink to="/catalog" className={navClass}>
+                    <span className="material-symbols-outlined text-[18px]">category</span>
                     Categories
-                  </Link>
+                  </NavLink>
                 )}
               </>
             )}
             {/* Business admin — SUPER_ADMIN only. */}
             {isSuperAdmin && (
-              <Link to="/businesses" className="text-ink/70 hover:text-ink">
+              <NavLink to="/businesses" className={navClass}>
+                <span className="material-symbols-outlined text-[18px]">store</span>
                 Businesses
-              </Link>
+              </NavLink>
             )}
             {/* User administration — SUPER_ADMIN only. */}
             {isSuperAdmin && (
-              <Link to="/users" className="text-ink/70 hover:text-ink">
+              <NavLink to="/users" className={navClass}>
+                <span className="material-symbols-outlined text-[18px]">group</span>
                 Users
-              </Link>
+              </NavLink>
             )}
           </nav>
         </div>
@@ -86,8 +106,9 @@ export default function Navbar() {
 
           {selected && (
             <span
-              className={`hidden sm:inline-block text-xs font-medium px-2.5 py-1 rounded-full text-white ${BADGE_CLASSES[theme.accent]}`}
+              className={`iv-badge hidden sm:inline-flex text-white shadow-soft ${BADGE_CLASSES[theme.accent]}`}
             >
+              <span className="iv-status-dot h-1.5 w-1.5" style={{ backgroundColor: 'currentColor' }} />
               {theme.label}
             </span>
           )}
@@ -99,12 +120,18 @@ export default function Navbar() {
             </span>
             <Link
               to="/change-password"
-              className="text-ink/50 hover:text-ink underline hidden sm:inline"
+              className="text-ink/50 hover:text-ink transition-colors hidden sm:inline-flex items-center"
+              title="Change password"
             >
-              Password
+              <span className="material-symbols-outlined text-[20px]">key</span>
             </Link>
-            <button onClick={handleLogout} className="text-ink/50 hover:text-ink underline">
-              Log out
+            <button
+              onClick={handleLogout}
+              className="iv-btn iv-btn-ghost !px-2.5 !py-1.5 text-xs"
+              title="Log out"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span className="hidden sm:inline">Log out</span>
             </button>
           </div>
         </div>

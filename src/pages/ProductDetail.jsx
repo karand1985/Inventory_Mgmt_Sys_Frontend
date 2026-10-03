@@ -52,15 +52,27 @@ export default function ProductDetail() {
     }
   }
 
-  if (loading || !product) return <p className="text-center mt-16 text-ink/60">Loading…</p>;
+  if (loading || !product)
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="iv-skeleton h-7 w-56 mb-2" />
+        <div className="iv-skeleton h-4 w-40 mb-6" />
+        <div className="grid sm:grid-cols-3 gap-4 mb-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="iv-skeleton h-20 rounded-xl" />
+          ))}
+        </div>
+        <div className="iv-skeleton h-40 rounded-xl" />
+      </div>
+    );
 
   const lowStock = (product.currentQuantity ?? 0) <= LOW_STOCK_AT;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="max-w-3xl mx-auto px-4 py-6 iv-page-in">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-xl font-semibold">{product.name || product.productCode}</h1>
+          <h1 className="iv-display text-2xl font-extrabold">{product.name || product.productCode}</h1>
           <p className="text-sm text-ink/60">
             {product.categoryName}
             {product.productCode && (
@@ -68,7 +80,8 @@ export default function ProductDetail() {
             )}
           </p>
           {product.seasonTag && (
-            <span className="inline-block mt-2 text-xs font-medium bg-amber-100 text-amber-800 rounded-full px-2.5 py-0.5">
+            <span className="iv-badge mt-2 bg-amber-100 text-amber-800 border border-amber-200">
+              <span className="material-symbols-outlined text-[14px]">sell</span>
               {product.seasonTag}
             </span>
           )}
@@ -76,16 +89,12 @@ export default function ProductDetail() {
         <div className="flex gap-2 shrink-0">
           {canWrite && (
             <>
-              <Link
-                to={`/products/${id}/edit`}
-                className="text-sm font-medium border border-line rounded-md px-3 py-1.5"
-              >
+              <Link to={`/products/${id}/edit`} className="iv-btn iv-btn-ghost !px-3 !py-1.5">
+                <span className="material-symbols-outlined text-[18px]">edit</span>
                 Edit
               </Link>
-              <button
-                onClick={handleDelete}
-                className="text-sm font-medium border border-red-200 text-red-600 rounded-md px-3 py-1.5"
-              >
+              <button onClick={handleDelete} className="iv-btn iv-btn-danger !px-3 !py-1.5">
+                <span className="material-symbols-outlined text-[18px]">delete</span>
                 Delete
               </button>
             </>
@@ -94,24 +103,24 @@ export default function ProductDetail() {
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-line rounded-lg p-3">
+        <div className="iv-card iv-glow-border p-3">
           <div className="text-xs text-ink/50">Current stock</div>
-          <div className={`text-lg font-semibold ${lowStock ? 'text-red-600' : ''}`}>
+          <div className={`iv-display text-xl font-extrabold ${lowStock ? 'text-red-600' : ''}`}>
             {product.currentQuantity ?? 0}
           </div>
         </div>
-        <div className="bg-white border border-line rounded-lg p-3">
+        <div className="iv-card iv-glow-border p-3">
           <div className="text-xs text-ink/50">Cost price</div>
-          <div className="text-lg font-semibold">₹{product.costPrice ?? '—'}</div>
+          <div className="iv-display text-xl font-extrabold">₹{product.costPrice ?? '—'}</div>
         </div>
-        <div className="bg-white border border-line rounded-lg p-3">
+        <div className="iv-card iv-glow-border p-3">
           <div className="text-xs text-ink/50">Sell price</div>
-          <div className="text-lg font-semibold">₹{product.sellPrice ?? '—'}</div>
+          <div className="iv-display text-xl font-extrabold">₹{product.sellPrice ?? '—'}</div>
         </div>
       </div>
 
       <div className="mb-6">
-        <span className="text-sm font-medium block mb-2">Photos</span>
+        <span className="iv-display text-sm font-bold block mb-2">Photos</span>
         {!canWrite ? (
           <div className="flex flex-wrap gap-3">
             {(product.images ?? []).map((img) => (
@@ -122,7 +131,7 @@ export default function ProductDetail() {
                   onClick={() =>
                     setLightboxIndex((product.images ?? []).findIndex((i) => i.id === img.id))
                   }
-                  className="w-24 h-24 rounded-md object-cover border-2 border-line cursor-zoom-in"
+                  className="w-24 h-24 rounded-md object-cover border-2 border-line cursor-zoom-in transition-transform hover:scale-105"
                 />
                 {(img.tags ?? []).length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -162,25 +171,28 @@ export default function ProductDetail() {
       <div className="grid sm:grid-cols-2 gap-6">
         {canWrite && (
           <div>
-            <h2 className="text-sm font-medium mb-2">Log stock movement</h2>
+            <h2 className="iv-display text-sm font-bold mb-2">Log stock movement</h2>
             <StockLogForm product={product} onLogged={refresh} />
           </div>
         )}
 
         <div>
-          <h2 className="text-sm font-medium mb-2">History</h2>
+          <h2 className="iv-display text-sm font-bold mb-2">History</h2>
           {history.length === 0 ? (
-            <p className="text-sm text-ink/50">No stock movements logged yet.</p>
+            <div className="iv-card p-6 text-center text-sm text-ink/50">
+              No stock movements logged yet.
+            </div>
           ) : (
             <ul className="flex flex-col gap-2">
-              {history.map((h) => (
+              {history.map((h, i) => (
                 <li
                   key={h.id}
-                  className="bg-white border border-line rounded-lg px-3 py-2 text-sm flex items-center justify-between gap-3"
+                  className="iv-card iv-stagger px-3 py-2.5 text-sm flex items-center justify-between gap-3"
+                  style={{ '--i': i }}
                 >
                   <div>
                     <div>
-                      <span className={h.changeType === 'IN' ? 'text-green-700' : 'text-ink'}>
+                      <span className={h.changeType === 'IN' ? 'text-green-700 font-semibold' : 'text-ink font-semibold'}>
                         {h.changeType === 'IN' ? '+' : '−'}
                         {h.quantity}
                       </span>

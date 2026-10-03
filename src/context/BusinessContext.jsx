@@ -69,6 +69,14 @@ export function BusinessProvider({ children }) {
 
   const selected = businesses.find((b) => String(b.id) === String(selectedId)) || null;
 
+  // Drive the CSS accent tokens (--iv-accent*) off the selected business by
+  // setting data-accent on <html>. index.css swaps the maroon/gold (yogart)
+  // palette for the marigold/red (mk) one based on this attribute.
+  useEffect(() => {
+    const accent = themeFor(selected?.name).accent;
+    document.documentElement.setAttribute('data-accent', accent);
+  }, [selected]);
+
   const clearSelection = () => setSelectedId(null);
 
   return (

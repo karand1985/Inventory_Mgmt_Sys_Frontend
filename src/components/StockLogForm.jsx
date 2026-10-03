@@ -62,17 +62,17 @@ export default function StockLogForm({ product, onLogged }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-line rounded-lg p-4 flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="iv-card p-4 flex flex-col gap-3">
       <div className="flex gap-2">
         {TYPES.map((type) => (
           <button
             key={type.value}
             type="button"
             onClick={() => setChangeType(type.value)}
-            className={`flex-1 text-sm font-medium py-2 rounded-md border ${
+            className={`flex-1 text-sm font-semibold py-2 rounded-lg border transition-all ${
               changeType === type.value
-                ? 'bg-ink text-white border-ink'
-                : 'border-line text-ink/60'
+                ? 'iv-btn-primary border-transparent'
+                : 'border-line text-ink/60 hover:border-ink/30 bg-white/60'
             }`}
           >
             {type.label}
@@ -84,7 +84,7 @@ export default function StockLogForm({ product, onLogged }) {
 
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-ink/70">
+          <span className="text-xs font-semibold text-ink/70">
             Quantity {removing && <span className="text-ink/40">· {available} available</span>}
           </span>
           <input
@@ -93,20 +93,20 @@ export default function StockLogForm({ product, onLogged }) {
             required
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="border border-line rounded-md px-3 py-2 bg-white"
+            className="iv-input"
           />
         </label>
 
         {showUnitPrice && (
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-ink/70">Actual sale price (₹)</span>
+            <span className="text-xs font-semibold text-ink/70">Actual sale price (₹)</span>
             <input
               type="number"
               min="0"
               step="0.01"
               value={unitPrice}
               onChange={(e) => setUnitPrice(e.target.value)}
-              className="border border-line rounded-md px-3 py-2 bg-white"
+              className="iv-input"
               placeholder={String(product.sellPrice ?? '')}
             />
           </label>
@@ -114,23 +114,23 @@ export default function StockLogForm({ product, onLogged }) {
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-ink/70">Date</span>
+        <span className="text-xs font-semibold text-ink/70">Date</span>
         <input
           type="date"
           required
           value={eventDate}
           onChange={(e) => setEventDate(e.target.value)}
-          className="border border-line rounded-md px-3 py-2 bg-white"
+          className="iv-input"
         />
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-ink/70">Note (optional)</span>
+        <span className="text-xs font-semibold text-ink/70">Note (optional)</span>
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="e.g. Sold at exhibition, combo discount"
-          className="border border-line rounded-md px-3 py-2 bg-white"
+          className="iv-input"
         />
       </label>
 
@@ -139,9 +139,19 @@ export default function StockLogForm({ product, onLogged }) {
       <button
         type="submit"
         disabled={saving || (removing && Number(quantity) > available)}
-        className="bg-ink text-white font-medium rounded-md px-4 py-2.5 disabled:opacity-50"
+        className="iv-btn iv-btn-primary"
       >
-        {saving ? 'Logging…' : 'Log movement'}
+        {saving ? (
+          <>
+            <span className="iv-spinner h-4 w-4" />
+            Logging…
+          </>
+        ) : (
+          <>
+            <span className="material-symbols-outlined text-[18px]">add_task</span>
+            Log movement
+          </>
+        )}
       </button>
     </form>
   );

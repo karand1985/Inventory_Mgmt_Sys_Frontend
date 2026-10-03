@@ -54,7 +54,7 @@ export default function Lightbox({ images, index, onIndex, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center"
+      className="iv-page-in fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       onClick={onClose}

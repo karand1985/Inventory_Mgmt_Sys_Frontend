@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
-import { useBusiness, themeFor } from '../context/BusinessContext';
+import { useBusiness } from '../context/BusinessContext';
 import { useToast } from '../context/ToastContext';
 import ImageUploader from '../components/ImageUploader';
-
-const ACCENT_BG = { yogart: 'bg-yogart', mk: 'bg-mk' };
 
 export default function ProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { selected } = useBusiness();
   const { success, error: toastError } = useToast();
-  const theme = themeFor(selected?.name);
 
   // Once a brand-new product is saved we keep the user on this screen and reveal
   // the photo uploader (images attach to an existing product id). `savedId`
@@ -128,19 +125,19 @@ export default function ProductForm() {
     ) : null;
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <h1 className="text-xl font-semibold mb-5">
+    <div className="max-w-lg mx-auto px-4 py-6 iv-page-in">
+      <h1 className="iv-display text-2xl font-extrabold mb-5">
         {isPersisted ? 'Edit product' : 'Add product'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Product code (SKU)</span>
+      <form onSubmit={handleSubmit} className="iv-card p-5 flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">Product code (SKU)</span>
           <input
             required
             value={productCode}
             onChange={(e) => setProductCode(e.target.value)}
-            className="border border-line rounded-md px-3 py-2 bg-white"
+            className="iv-input"
             placeholder="e.g. MK-01-J"
           />
           <span className="text-xs text-ink/50">
@@ -149,12 +146,12 @@ export default function ProductForm() {
           {fieldError('productCode')}
         </label>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Name (optional)</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">Name (optional)</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border border-line rounded-md px-3 py-2 bg-white"
+            className="iv-input"
             placeholder="e.g. Krishna frame — medium"
           />
           <span className="text-xs text-ink/50">
@@ -163,8 +160,8 @@ export default function ProductForm() {
           {fieldError('name')}
         </label>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Category</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">Category</span>
           <select
             required
             value={topId}
@@ -172,7 +169,7 @@ export default function ProductForm() {
               setTopId(e.target.value);
               setSubId(''); // reset sub-category when the top-level changes
             }}
-            className="border border-line rounded-md px-3 py-2 bg-white"
+            className="iv-input"
           >
             <option value="" disabled>
               Choose a category
@@ -187,13 +184,13 @@ export default function ProductForm() {
         </label>
 
         {subs.length > 0 && (
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Sub-category</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Sub-category</span>
             <select
               required
               value={subId}
               onChange={(e) => setSubId(e.target.value)}
-              className="border border-line rounded-md px-3 py-2 bg-white"
+              className="iv-input"
             >
               <option value="" disabled>
                 Choose a sub-category
@@ -211,39 +208,39 @@ export default function ProductForm() {
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Cost price (₹)</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Cost price (₹)</span>
             <input
               type="number"
               min="0"
               step="0.01"
               value={costPrice}
               onChange={(e) => setCostPrice(e.target.value)}
-              className="border border-line rounded-md px-3 py-2 bg-white"
+              className="iv-input"
             />
             {fieldError('costPrice')}
           </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Sell price (₹)</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Sell price (₹)</span>
             <input
               type="number"
               min="0"
               step="0.01"
               value={sellPrice}
               onChange={(e) => setSellPrice(e.target.value)}
-              className="border border-line rounded-md px-3 py-2 bg-white"
+              className="iv-input"
             />
             {fieldError('sellPrice')}
           </label>
         </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Season tag (optional)</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">Season tag (optional)</span>
           <input
             value={seasonTag}
             onChange={(e) => setSeasonTag(e.target.value)}
             placeholder="e.g. Rakhi 2026 — leave blank for year-round items like jewelry"
-            className="border border-line rounded-md px-3 py-2 bg-white"
+            className="iv-input"
           />
           {fieldError('seasonTag')}
         </label>
@@ -254,12 +251,20 @@ export default function ProductForm() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className={`text-white font-medium rounded-md px-4 py-2.5 mt-2 ${ACCENT_BG[theme.accent]}`}
-        >
-          {saving ? 'Saving…' : isPersisted ? 'Save changes' : 'Add product'}
+        <button type="submit" disabled={saving} className="iv-btn iv-btn-primary mt-2">
+          {saving ? (
+            <>
+              <span className="iv-spinner h-4 w-4" />
+              Saving…
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[18px]">
+                {isPersisted ? 'save' : 'add'}
+              </span>
+              {isPersisted ? 'Save changes' : 'Add product'}
+            </>
+          )}
         </button>
       </form>
 
@@ -267,7 +272,7 @@ export default function ProductForm() {
           pressing Enter in a tag field) can never trigger a product save. */}
       {isPersisted && (
         <div className="mt-6">
-          <span className="text-sm font-medium block mb-2">Photos</span>
+          <span className="iv-display text-sm font-bold block mb-2">Photos</span>
           <ImageUploader productId={persistedId} images={images} onChange={setImages} />
 
           {savedId && (
@@ -275,8 +280,9 @@ export default function ProductForm() {
             <button
               type="button"
               onClick={() => navigate(`/products/${savedId}`)}
-              className="text-sm font-medium border border-line rounded-md px-4 py-2 mt-4"
+              className="iv-btn iv-btn-ghost mt-4"
             >
+              <span className="material-symbols-outlined text-[18px]">visibility</span>
               Done — view product
             </button>
           )}

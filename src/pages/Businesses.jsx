@@ -82,9 +82,9 @@ export default function Businesses() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 iv-page-in">
       <header className="mb-5">
-        <h1 className="text-xl font-semibold">Businesses</h1>
+        <h1 className="iv-display text-2xl font-extrabold">Businesses</h1>
         <p className="text-sm text-ink/60 mt-1">
           Create and manage businesses. Select one to work on — categories and
           products you add will belong to the selected business.
@@ -97,31 +97,40 @@ export default function Businesses() {
           value={newBusiness}
           onChange={(e) => setNewBusiness(e.target.value)}
           placeholder="New business name"
-          className="border border-line rounded-md px-3 py-2 flex-1 bg-white text-sm"
+          className="iv-input flex-1"
         />
-        <button
-          disabled={saving}
-          className="bg-ink text-white text-sm font-medium rounded-md px-4 py-2 disabled:opacity-50"
-        >
-          {saving ? 'Adding…' : 'Add business'}
+        <button disabled={saving} className="iv-btn iv-btn-primary shrink-0">
+          {saving ? (
+            <>
+              <span className="iv-spinner h-4 w-4" />
+              Adding…
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[18px]">add_business</span>
+              Add business
+            </>
+          )}
         </button>
       </form>
 
       <ul className="flex flex-col gap-2">
-        {list.map((b) => {
+        {list.map((b, i) => {
           const isSelected = String(b.id) === String(selectedId);
           return (
             <li
               key={b.id}
-              className={`bg-white border rounded-lg px-3 py-2.5 flex items-center justify-between text-sm ${
-                isSelected ? 'border-ink' : 'border-line'
+              className={`iv-card iv-stagger px-3 py-2.5 flex items-center justify-between text-sm ${
+                isSelected ? '!border-[rgb(var(--iv-accent))]' : ''
               }`}
+              style={{ '--i': i }}
             >
               <span className="flex flex-col gap-1 min-w-0">
                 <span className="flex items-center gap-2">
-                  <span className="font-medium">{b.name}</span>
+                  <span className="font-semibold">{b.name}</span>
                   {isSelected && (
-                    <span className="text-xs text-white bg-ink rounded-full px-2 py-0.5">
+                    <span className="iv-badge text-white" style={{ backgroundColor: 'rgb(var(--iv-accent))' }}>
+                      <span className="iv-status-dot h-1.5 w-1.5" style={{ backgroundColor: 'currentColor' }} />
                       Working on
                     </span>
                   )}
@@ -132,15 +141,15 @@ export default function Businesses() {
                 {!isSelected && (
                   <button
                     onClick={() => setSelectedId(b.id)}
-                    className="text-ink/70 hover:text-ink"
+                    className="text-ink/70 hover:text-ink font-medium transition-colors"
                   >
                     Work on this
                   </button>
                 )}
-                <button onClick={() => renameBusiness(b)} className="text-ink/60 hover:text-ink">
+                <button onClick={() => renameBusiness(b)} className="text-ink/60 hover:text-ink transition-colors">
                   Rename
                 </button>
-                <button onClick={() => deleteBusiness(b)} className="text-red-600 hover:text-red-700">
+                <button onClick={() => deleteBusiness(b)} className="text-red-600 hover:text-red-700 transition-colors">
                   Delete
                 </button>
               </span>

@@ -121,9 +121,9 @@ export default function CatalogSettings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 iv-page-in">
       <header className="mb-5">
-        <h1 className="text-xl font-semibold">
+        <h1 className="iv-display text-2xl font-extrabold">
           Categories
           {selected && <span className="text-ink/50 text-base font-normal"> · {selected.name}</span>}
         </h1>
@@ -149,65 +149,77 @@ export default function CatalogSettings() {
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               placeholder="New category name"
-              className="border border-line rounded-md px-3 py-2 flex-1 bg-white text-sm"
+              className="iv-input flex-1"
             />
-            <button className="bg-ink text-white text-sm font-medium rounded-md px-4 py-2">
+            <button className="iv-btn iv-btn-primary shrink-0">
+              <span className="material-symbols-outlined text-[18px]">add</span>
               Add category
             </button>
           </form>
           {loadingCats ? (
-            <p className="text-ink/60 text-sm">Loading…</p>
+            <ul className="flex flex-col gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <li key={i} className="iv-skeleton h-14 rounded-xl" />
+              ))}
+            </ul>
           ) : (
             <ul className="flex flex-col gap-2">
-              {roots.map((c) => {
+              {roots.map((c, i) => {
                 const kids = childrenOf(c.id);
                 return (
                   <li
                     key={c.id}
-                    className="bg-white border border-line rounded-lg px-3 py-2.5 text-sm"
+                    className="iv-card iv-stagger px-3 py-2.5 text-sm"
+                    style={{ '--i': i }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex flex-col gap-1 min-w-0">
-                        <span className="font-medium">{c.name}</span>
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[18px] text-ink/40">folder</span>
+                          {c.name}
+                        </span>
                         <AuditMeta entity={c} variant="inline" />
                       </span>
                       <span className="flex gap-3">
                         <button
                           onClick={() => addSubCategory(c)}
-                          className="text-ink/60 hover:text-ink"
+                          className="text-ink/60 hover:text-ink transition-colors"
                         >
                           + Sub
                         </button>
-                        <button onClick={() => renameCategory(c)} className="text-ink/60 hover:text-ink">
+                        <button onClick={() => renameCategory(c)} className="text-ink/60 hover:text-ink transition-colors">
                           Rename
                         </button>
-                        <button onClick={() => deleteCategory(c)} className="text-red-600 hover:text-red-700">
+                        <button onClick={() => deleteCategory(c)} className="text-red-600 hover:text-red-700 transition-colors">
                           Delete
                         </button>
                       </span>
                     </div>
 
                     {kids.length > 0 && (
-                      <ul className="mt-2 ml-4 pl-3 border-l border-line flex flex-col gap-1.5">
+                      <ul className="mt-2 ml-4 pl-3 border-l-2 border-line flex flex-col gap-1.5">
                         {kids.map((sub) => (
                           <li
                             key={sub.id}
                             className="flex items-center justify-between py-1"
                           >
                             <span className="flex flex-col gap-1 min-w-0">
-                              <span className="text-ink/80">{sub.name}</span>
+                              <span className="text-ink/80 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[16px] text-ink/30">subdirectory_arrow_right</span>
+                                {sub.name}
+                              </span>
                               <AuditMeta entity={sub} variant="inline" />
                             </span>
                             <span className="flex gap-3">
                               <button
                                 onClick={() => renameCategory(sub)}
-                                className="text-ink/60 hover:text-ink"
+                                className="text-ink/60 hover:text-ink transition-colors"
                               >
                                 Rename
                               </button>
                               <button
                                 onClick={() => deleteCategory(sub)}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 transition-colors"
                               >
                                 Delete
                               </button>

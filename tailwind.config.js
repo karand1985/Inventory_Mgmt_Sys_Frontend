@@ -4,7 +4,28 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Work Sans"', 'system-ui', 'sans-serif']
+        sans: ['"Work Sans"', 'system-ui', 'sans-serif'],
+        display: ['Manrope', '"Work Sans"', 'system-ui', 'sans-serif']
+      },
+      boxShadow: {
+        soft: '0 8px 24px -12px rgba(42, 36, 32, 0.18)',
+        lift: '0 18px 40px -16px rgba(42, 36, 32, 0.28)'
+      },
+      keyframes: {
+        'page-in': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' }
+        },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-22px)' }
+        }
+      },
+      animation: {
+        'page-in': 'page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both',
+        'fade-in': 'fade-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both',
+        float: 'float 10s ease-in-out infinite'
       },
       colors: {
         // Warm paper base — a workshop-ledger feel, not the generic AI cream.

@@ -57,24 +57,35 @@ export function ConfirmProvider({ children }) {
       {children}
       {state && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
           onClick={() => close(false)}
         >
           <div
             role="alertdialog"
             aria-modal="true"
-            className="w-full max-w-sm rounded-lg bg-paper border border-line shadow-xl p-5"
+            className="iv-card iv-glow-border iv-page-in w-full max-w-sm p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-ink">{state.title}</h2>
-            {state.message && (
-              <p className="mt-2 text-sm text-ink/70 break-words">{state.message}</p>
-            )}
+            <div className="flex items-start gap-3">
+              <span
+                className={`material-symbols-outlined text-[24px] mt-0.5 ${
+                  state.danger ? 'text-red-500' : 'text-ink/50'
+                }`}
+              >
+                {state.danger ? 'warning' : 'help'}
+              </span>
+              <div className="min-w-0">
+                <h2 className="iv-display text-lg font-extrabold text-ink">{state.title}</h2>
+                {state.message && (
+                  <p className="mt-1 text-sm text-ink/70 break-words">{state.message}</p>
+                )}
+              </div>
+            </div>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => close(false)}
-                className="px-4 py-2 rounded-md text-sm font-medium border border-line text-ink hover:bg-line/40 transition-colors"
+                className="iv-btn iv-btn-ghost"
               >
                 {state.cancelLabel}
               </button>
@@ -82,9 +93,7 @@ export function ConfirmProvider({ children }) {
                 type="button"
                 autoFocus
                 onClick={() => close(true)}
-                className={`px-4 py-2 rounded-md text-sm font-medium text-white transition-colors ${
-                  state.danger ? 'bg-red-600 hover:bg-red-700' : 'bg-ink hover:bg-ink/90'
-                }`}
+                className={`iv-btn ${state.danger ? 'iv-btn-danger' : 'iv-btn-primary'}`}
               >
                 {state.confirmLabel}
               </button>

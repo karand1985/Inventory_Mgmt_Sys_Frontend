@@ -61,7 +61,7 @@ export default function BusinessSwitcher({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center justify-between gap-2 border border-line rounded-md px-3 py-1.5 bg-white text-sm hover:border-ink/40 transition-colors ${
+        className={`flex items-center justify-between gap-2 border border-line rounded-lg px-3 py-1.5 bg-white/80 text-sm hover:border-[rgb(var(--iv-accent))] transition-colors ${
           fullWidth ? 'w-full' : ''
         }`}
       >
@@ -92,7 +92,7 @@ export default function BusinessSwitcher({
       {open && (
         <ul
           role="listbox"
-          className={`absolute z-20 mt-1 min-w-full w-max max-w-xs bg-white border border-line rounded-md shadow-lg py-1 ${
+          className={`iv-card iv-glass absolute z-20 mt-1 min-w-full w-max max-w-xs py-1 ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >
@@ -104,8 +104,8 @@ export default function BusinessSwitcher({
                 <button
                   type="button"
                   onClick={() => choose(b.id)}
-                  className={`w-full text-left flex items-center gap-2 px-3 py-2 text-sm hover:bg-line/40 ${
-                    isCurrent ? 'font-medium' : ''
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-line/40 transition-colors ${
+                    isCurrent ? 'font-semibold' : ''
                   }`}
                 >
                   <span

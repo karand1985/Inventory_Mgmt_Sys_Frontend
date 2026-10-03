@@ -1,10 +1,349 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #F1E9DC;
-  color: #2A2420;
+/* ============================================================
+   INVENTORY DESIGN SYSTEM
+   A warm "workshop-ledger" aesthetic lifted to modern polish:
+   glassmorphism, glow borders, staggered entrances, shimmer
+   skeletons, an ambient aurora canvas and token-driven buttons.
+   Colours are RGB triplets so Tailwind alpha modifiers keep
+   working (e.g. bg-paper/60). The active business accent is set
+   via data-accent on <html> (yogart | mk) by BusinessContext.
+   ============================================================ */
+:root {
+  /* Warm neutral surfaces */
+  --iv-paper: 241 233 220;            /* #F1E9DC base canvas  */
+  --iv-surface: 255 255 255;          /* card surface         */
+  --iv-surface-soft: 250 245 237;     /* subtle raised fill   */
+  --iv-ink: 42 36 32;                 /* #2A2420 primary text */
+  --iv-line: 217 203 180;             /* #D9CBB4 hairline     */
+
+  /* Accent — defaults to Yogart (deep maroon + gold). */
+  --iv-accent: 122 31 43;             /* #7A1F2B */
+  --iv-accent-dark: 90 22 32;         /* #5A1620 */
+  --iv-accent-soft: 184 134 59;       /* #B8863B gold */
+  --iv-accent-fg: 255 255 255;
 }
+
+/* MK Creations — festive marigold + red. */
+[data-accent='mk'] {
+  --iv-accent: 196 80 28;             /* #C4501C */
+  --iv-accent-dark: 156 61 20;        /* #9C3D14 */
+  --iv-accent-soft: 232 163 61;       /* #E8A33D marigold */
+  --iv-accent-fg: 255 255 255;
+}
+
+/* ============================================================
+   Icon font
+   ============================================================ */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ============================================================
+   Canvas — paper base + ambient accent aurora + blueprint grid.
+   Fixed attachment keeps the mesh steady while content scrolls.
+   ============================================================ */
+html,
+body {
+  background-color: rgb(var(--iv-paper) / 1);
+  color: rgb(var(--iv-ink) / 1);
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Work Sans', system-ui, sans-serif;
+  background-image:
+    radial-gradient(48rem 30rem at 88% -12%, rgb(var(--iv-accent-soft) / 0.16), transparent 68%),
+    radial-gradient(42rem 28rem at -12% 10%, rgb(var(--iv-accent) / 0.08), transparent 70%),
+    radial-gradient(46rem 32rem at 50% 118%, rgb(var(--iv-accent) / 0.05), transparent 72%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Blueprint grid — opt-in on full-page shells. */
+.iv-grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(var(--iv-ink) / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--iv-ink) / 0.04) 1px, transparent 1px);
+  background-size: 34px 34px, 34px 34px;
+}
+
+/* Headline/display typeface helper. */
+.iv-display {
+  font-family: 'Manrope', 'Work Sans', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   Surfaces — card, glass, glow border
+   ============================================================ */
+
+/* Elevated paper card with a soft warm shadow. */
+.iv-card {
+  background-color: rgb(var(--iv-surface) / 0.92);
+  border: 1px solid rgb(var(--iv-line) / 0.8);
+  border-radius: 0.875rem;
+  box-shadow:
+    0 1px 2px rgb(42 36 32 / 0.04),
+    0 8px 24px -12px rgb(42 36 32 / 0.12);
+  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+}
+
+/* Interactive card — lifts and warms on hover. */
+.iv-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgb(var(--iv-accent) / 0.4);
+  box-shadow:
+    0 2px 4px rgb(42 36 32 / 0.05),
+    0 18px 40px -16px rgb(var(--iv-accent) / 0.28);
+}
+
+/* Frosted glass — used by the sticky header. */
+.iv-glass {
+  background-color: rgb(var(--iv-paper) / 0.72);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+}
+
+/* Gradient hairline glow along the top-left edge of a card. */
+.iv-glow-border {
+  position: relative;
+}
+.iv-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgb(var(--iv-accent-soft) / 0.7),
+    rgb(var(--iv-accent) / 0.2) 42%,
+    transparent 72%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Buttons — token-driven, with glow bloom + micro-press
+   ============================================================ */
+.iv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.15s ease, filter 0.2s ease,
+    background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.iv-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.iv-btn:active:not(:disabled) { transform: scale(0.97); }
+
+/* Primary — accent gradient with a colour bloom on hover. */
+.iv-btn-primary {
+  background-image: linear-gradient(180deg, rgb(var(--iv-accent) / 0.95), rgb(var(--iv-accent-dark) / 1));
+  color: rgb(var(--iv-accent-fg) / 1);
+  box-shadow: 0 1px 2px rgb(var(--iv-accent) / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.16);
+}
+.iv-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 22px -6px rgb(var(--iv-accent) / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.16);
+  filter: brightness(1.07);
+}
+
+/* Ghost — quiet paper surface with a crisp hairline. */
+.iv-btn-ghost {
+  background-color: rgb(var(--iv-surface) / 0.6);
+  color: rgb(var(--iv-ink) / 0.82);
+  border: 1px solid rgb(var(--iv-line) / 1);
+}
+.iv-btn-ghost:hover:not(:disabled) {
+  background-color: rgb(var(--iv-surface) / 1);
+  border-color: rgb(var(--iv-accent) / 0.5);
+  color: rgb(var(--iv-ink) / 1);
+  box-shadow: 0 4px 14px -6px rgb(var(--iv-accent) / 0.25);
+}
+
+/* Danger — red gradient bloom. */
+.iv-btn-danger {
+  background-image: linear-gradient(180deg, #ef4444, #b91c1c);
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(185 28 28 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.iv-btn-danger:hover:not(:disabled) {
+  box-shadow: 0 8px 22px -6px rgb(185 28 28 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.14);
+  filter: brightness(1.05);
+}
+
+/* ============================================================
+   Inputs — focus halo instead of a plain border flip
+   ============================================================ */
+.iv-input {
+  width: 100%;
+  border: 1px solid rgb(var(--iv-line) / 1);
+  border-radius: 0.625rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(var(--iv-ink) / 1);
+  background-color: rgb(var(--iv-surface) / 1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.iv-input::placeholder { color: rgb(var(--iv-ink) / 0.4); }
+.iv-input:not(:disabled):hover:not(:focus) { border-color: rgb(var(--iv-accent) / 0.4); }
+.iv-input:focus {
+  outline: none;
+  border-color: rgb(var(--iv-accent) / 1);
+  box-shadow: 0 0 0 3px rgb(var(--iv-accent) / 0.15), 0 0 14px rgb(var(--iv-accent) / 0.08);
+}
+
+/* ============================================================
+   Badge / pill
+   ============================================================ */
+.iv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   Animations — page-in, staggered entrance, shimmer skeleton
+   ============================================================ */
+.iv-page-in {
+  animation: iv-page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes iv-page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Set style={{ '--i': index }} on each child for a cascade. */
+.iv-stagger {
+  animation: iv-stagger-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes iv-stagger-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Shimmer skeleton — a travelling highlight instead of a pulse. */
+.iv-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(var(--iv-ink) / 0.07);
+  border-radius: 0.5rem;
+}
+.iv-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: iv-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes iv-shimmer { 100% { transform: translateX(100%); } }
+
+/* Inline spinner (buttons, inline loaders). */
+.iv-spinner {
+  display: inline-block;
+  border-radius: 9999px;
+  border: 2px solid rgb(255 255 255 / 0.3);
+  border-top-color: #fff;
+  animation: iv-spin 0.7s linear infinite;
+}
+@keyframes iv-spin { to { transform: rotate(360deg); } }
+
+/* Breathing live-status dot (emerald). */
+.iv-status-dot {
+  background-color: #16a34a;
+  border-radius: 9999px;
+  animation: iv-breathe 2.4s ease-in-out infinite;
+}
+@keyframes iv-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(22 163 74 / 0.5); }
+  50%      { box-shadow: 0 0 0 5px rgb(22 163 74 / 0); }
+}
+
+/* Decorative login orbs — slow vertical drift. */
+.iv-orb { animation: iv-float 10s ease-in-out infinite; }
+@keyframes iv-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-22px); }
+}
+
+/* Nav link active — glowing underline accent. */
+.iv-nav-active {
+  position: relative;
+  color: rgb(var(--iv-ink) / 1) !important;
+}
+.iv-nav-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.55rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgb(var(--iv-accent)), rgb(var(--iv-accent-soft)));
+  box-shadow: 0 0 8px rgb(var(--iv-accent) / 0.5);
+}
+
+/* ============================================================
+   Accessibility — focus ring, reduced motion
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid rgb(var(--iv-accent) / 0.85);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+  box-shadow: 0 0 0 5px rgb(var(--iv-accent) / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Themed gradient scrollbar
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(var(--iv-accent-soft) / 0.6), rgb(var(--iv-accent) / 0.6));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(var(--iv-accent) / 0.85), rgb(var(--iv-accent-dark)));
+  background-clip: padding-box;
+}
+
+/* Themed text selection. */
+::selection { background-color: rgb(var(--iv-accent) / 0.2); }

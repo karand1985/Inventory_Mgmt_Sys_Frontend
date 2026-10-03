@@ -10,6 +10,13 @@ const VARIANTS = {
   info: 'bg-ink text-white',
 };
 
+// Material Symbol per toast kind.
+const VARIANT_ICON = {
+  success: 'check_circle',
+  error: 'error',
+  info: 'info',
+};
+
 const DEFAULT_DURATION = 5000;
 
 /**
@@ -57,8 +64,11 @@ export function ToastProvider({ children }) {
           <div
             key={t.id}
             role="alert"
-            className={`flex items-start gap-3 rounded-md shadow-lg px-4 py-3 text-sm ${VARIANTS[t.variant] || VARIANTS.info}`}
+            className={`iv-page-in flex items-start gap-3 rounded-xl shadow-lift px-4 py-3 text-sm ${VARIANTS[t.variant] || VARIANTS.info}`}
           >
+            <span className="material-symbols-outlined text-[20px] shrink-0 mt-px">
+              {VARIANT_ICON[t.variant] || VARIANT_ICON.info}
+            </span>
             <span className="flex-1 break-words">{t.message}</span>
             <button
               onClick={() => dismiss(t.id)}

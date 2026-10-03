@@ -286,9 +286,10 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="w-24 h-24 rounded-md border-2 border-dashed border-line flex items-center justify-center text-xs text-ink/50 hover:border-ink/40"
+          className="w-24 h-24 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-xs text-ink/50 hover:border-[rgb(var(--iv-accent))] hover:text-ink/70 transition-colors"
         >
-          + Add photos
+          <span className="material-symbols-outlined text-[22px]">add_photo_alternate</span>
+          Add photos
         </button>
         <input
           ref={fileInputRef}
@@ -305,9 +306,9 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
 
       {/* Staging area — photos wait here (with per-photo tags) until "Upload". */}
       {pending.length > 0 && (
-        <div className="border border-dashed border-line rounded-md p-3 mb-3 bg-paper/40">
+        <div className="iv-card border-dashed p-3 mb-3 bg-paper/40">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-ink/70">
+            <span className="text-xs font-semibold text-ink/70">
               {pending.length} photo{pending.length === 1 ? '' : 's'} ready to upload
             </span>
             <div className="flex gap-2">
@@ -315,11 +316,16 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
                 type="button"
                 onClick={uploadPending}
                 disabled={uploading}
-                className="text-xs bg-ink text-white rounded px-3 py-1.5 disabled:opacity-50"
+                className="iv-btn iv-btn-primary !px-3 !py-1.5 !text-xs"
               >
-                {uploading
-                  ? 'Uploading…'
-                  : `Upload ${pending.length} photo${pending.length === 1 ? '' : 's'}`}
+                {uploading ? (
+                  <>
+                    <span className="iv-spinner h-3.5 w-3.5" />
+                    Uploading…
+                  </>
+                ) : (
+                  `Upload ${pending.length} photo${pending.length === 1 ? '' : 's'}`
+                )}
               </button>
               <button
                 type="button"
@@ -329,7 +335,7 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
                   setCommonTags('');
                 }}
                 disabled={uploading}
-                className="text-xs bg-white border border-line rounded px-3 py-1.5 disabled:opacity-50"
+                className="iv-btn iv-btn-ghost !px-3 !py-1.5 !text-xs"
               >
                 Clear
               </button>
@@ -337,7 +343,7 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
           </div>
 
           <label className="flex flex-col gap-1 mb-3">
-            <span className="text-[11px] font-medium text-ink/60">
+            <span className="text-[11px] font-semibold text-ink/60">
               Tags for all photos below (comma-separated, optional)
             </span>
             <input
@@ -347,7 +353,7 @@ export default function ImageUploader({ productId, images, onChange, onView }) {
                 if (e.key === 'Enter') e.preventDefault();
               }}
               placeholder="e.g. rakhi, red, handmade"
-              className="border border-line rounded-md px-3 py-2 bg-white text-sm max-w-sm"
+              className="iv-input max-w-sm"
             />
           </label>
 

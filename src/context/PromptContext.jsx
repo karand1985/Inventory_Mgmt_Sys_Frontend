@@ -71,25 +71,25 @@ export function PromptProvider({ children }) {
       {children}
       {state && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
           onClick={() => close(null)}
         >
           <form
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-sm rounded-lg bg-paper border border-line shadow-xl p-5"
+            className="iv-card iv-glow-border iv-page-in w-full max-w-sm p-5"
             onClick={(e) => e.stopPropagation()}
             onSubmit={(e) => {
               e.preventDefault();
               submit();
             }}
           >
-            <h2 className="text-lg font-semibold text-ink">{state.title}</h2>
+            <h2 className="iv-display text-lg font-extrabold text-ink">{state.title}</h2>
             {state.message && (
               <p className="mt-2 text-sm text-ink/70 break-words">{state.message}</p>
             )}
             {state.label && (
-              <label className="mt-4 block text-sm font-medium text-ink">{state.label}</label>
+              <label className="mt-4 block text-sm font-semibold text-ink">{state.label}</label>
             )}
             <input
               ref={inputRef}
@@ -97,20 +97,17 @@ export function PromptProvider({ children }) {
               value={value}
               placeholder={state.placeholder}
               onChange={(e) => setValue(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:border-ink focus:outline-none"
+              className="iv-input mt-1"
             />
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => close(null)}
-                className="px-4 py-2 rounded-md text-sm font-medium border border-line text-ink hover:bg-line/40 transition-colors"
+                className="iv-btn iv-btn-ghost"
               >
                 {state.cancelLabel}
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-md text-sm font-medium text-white bg-ink hover:bg-ink/90 transition-colors"
-              >
+              <button type="submit" className="iv-btn iv-btn-primary">
                 {state.confirmLabel}
               </button>
             </div>

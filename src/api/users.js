@@ -36,4 +36,15 @@ export function setStatus(id, enabled) {
   return http.patch(`/users/${id}/status`, { enabled });
 }
 
-export const usersApi = { list, me, changePassword, setStatus };
+/**
+ * PUT /users/{id} (SUPER_ADMIN) — edit a user. Email is immutable and must not
+ * be sent. Leave `password` blank/omitted to keep the current password.
+ * @param {number} id
+ * @param {{ name: string, role: string, businessId?: number|null, password?: string|null }} data
+ * @returns {Promise<import('./types').User>}
+ */
+export function update(id, data) {
+  return http.put(`/users/${id}`, data);
+}
+
+export const usersApi = { list, me, changePassword, setStatus, update };
