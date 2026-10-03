@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useBusiness, themeFor } from '../context/BusinessContext';
 import { useToast } from '../context/ToastContext';
+import BusinessLogo from '../components/BusinessLogo';
 
 const ACCENT_TEXT = { yogart: 'text-yogart', mk: 'text-mk' };
 
@@ -81,8 +82,17 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 iv-page-in">
-      <h1 className="iv-display text-2xl font-extrabold mb-1">{displayName} — Overview</h1>
-      <p className="text-sm text-ink/60 mb-6">Inventory, valuation and sales at a glance.</p>
+      <div className="flex items-center gap-4 mb-6">
+        <BusinessLogo
+          name={displayName}
+          logoUrl={selected?.logoUrl}
+          className="h-14 w-14 rounded-2xl text-xl shrink-0"
+        />
+        <div>
+          <h1 className="iv-display text-2xl font-extrabold mb-0.5">{displayName} — Overview</h1>
+          <p className="text-sm text-ink/60">Inventory, valuation and sales at a glance.</p>
+        </div>
+      </div>
 
       {/* Inventory counts */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">

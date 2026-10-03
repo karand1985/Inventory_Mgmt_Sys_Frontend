@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useBusiness, themeFor } from '../context/BusinessContext';
-
-// Tailwind JIT can't see interpolated class names, so every accent literal used
-// here must appear as a full string. This map is that anchor.
-const DOT_CLASSES = {
-  yogart: 'bg-yogart',
-  mk: 'bg-mk'
-};
+import { useBusiness } from '../context/BusinessContext';
+import BusinessLogo from './BusinessLogo';
 
 /**
  * A single, reusable business-selection dropdown used both for first-time
@@ -52,7 +46,7 @@ export default function BusinessSwitcher({
     onSelected?.(id);
   }
 
-  const selectedTheme = selected ? themeFor(selected.name) : null;
+  const selected_present = Boolean(selected);
 
   return (
     <div ref={rootRef} className={`relative ${fullWidth ? 'w-full' : ''}`}>
@@ -66,9 +60,11 @@ export default function BusinessSwitcher({
         }`}
       >
         <span className="flex items-center gap-2 truncate">
-          {selectedTheme && (
-            <span
-              className={`inline-block w-2 h-2 rounded-full ${DOT_CLASSES[selectedTheme.accent]}`}
+          {selected_present && (
+            <BusinessLogo
+              name={selected.name}
+              logoUrl={selected.logoUrl}
+              className="h-5 w-5 rounded-md text-[10px] !shadow-none"
             />
           )}
           <span className={`truncate ${selected ? '' : 'text-ink/50'}`}>
@@ -97,7 +93,6 @@ export default function BusinessSwitcher({
           }`}
         >
           {businesses.map((b) => {
-            const theme = themeFor(b.name);
             const isCurrent = String(b.id) === String(selected?.id);
             return (
               <li key={b.id} role="option" aria-selected={isCurrent}>
@@ -108,8 +103,10 @@ export default function BusinessSwitcher({
                     isCurrent ? 'font-semibold' : ''
                   }`}
                 >
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ${DOT_CLASSES[theme.accent]}`}
+                  <BusinessLogo
+                    name={b.name}
+                    logoUrl={b.logoUrl}
+                    className="h-5 w-5 rounded-md text-[10px] !shadow-none"
                   />
                   <span className="truncate">{b.name}</span>
                   {isCurrent && <span className="ml-auto text-ink/40 text-xs">current</span>}

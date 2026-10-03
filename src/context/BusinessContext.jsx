@@ -15,11 +15,16 @@ export function themeFor(businessName) {
 }
 
 export function BusinessProvider({ children }) {
-  const { token } = useAuth();
+  const { token, isSuperAdmin } = useAuth();
   const [businesses, setBusinesses] = useState([]);
-  const [selectedId, setSelectedId] = useState(
-    () => localStorage.getItem('selectedBusinessId') || null
-  );
+  const [selectedId, setSelectedId] = useState(() => {
+    // SUPER_ADMIN selection is session-only: never restore it from a previous
+    // page load, so an admin always starts at the picker / admin area instead of
+    // being dropped back into a business on refresh. OWNER/VIEWER restore their
+    // last selection (they auto-select their single business anyway).
+    if (isSuperAdmin) return null;
+    return localStorage.getItem('selectedBusinessId') || null;
+  });
   const [loading, setLoading] = useState(true);
 
   // Fetches the roster the current account can see and reconciles the selection.
@@ -33,9 +38,12 @@ export function BusinessProvider({ children }) {
       .then((list) => {
         setBusinesses(list);
         setSelectedId((current) => {
-          // Auto-select when there's exactly one business (OWNER/VIEWER) so they
-          // never see an unnecessary picker.
-          if (list.length === 1) return list[0].id;
+          // Auto-select the only business for single-business roles (OWNER/
+          // VIEWER) so they never see an unnecessary picker. SUPER_ADMIN is a
+          // multi-business role by nature and must choose explicitly — never
+          // auto-drop them into a business, even when only one exists, or their
+          // admin landing (Businesses/Users) would be hijacked by that business.
+          if (!isSuperAdmin && list.length === 1) return list[0].id;
           // Drop a stale/foreign persisted id (e.g. left over from another
           // account) or one that was just deleted and is no longer in the roster.
           if (current && !list.some((b) => String(b.id) === String(current))) {
@@ -46,14 +54,19 @@ export function BusinessProvider({ children }) {
         return list;
       })
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, isSuperAdmin]);
 
   useEffect(() => {
     if (!token) {
-      // Logged out: forget the roster. We deliberately keep the persisted
-      // selectedBusinessId so a returning user of the *same* account lands back
-      // on their last business; it's re-validated against the fresh list below.
+      // Logged out (or session expired): forget the roster AND the selected
+      // business. Clearing the selection prevents one account's choice from
+      // bleeding into the next person who signs in on the same browser — e.g. a
+      // SUPER_ADMIN returning after an OWNER session would otherwise inherit a
+      // leftover selection and land in business context instead of the admin
+      // area (where only Businesses/Users should show). OWNER/VIEWER simply
+      // auto-select their single business again on their next login.
       setBusinesses([]);
+      setSelectedId(null);
       setLoading(false);
       return;
     }
@@ -63,9 +76,17 @@ export function BusinessProvider({ children }) {
   // Keep localStorage in lockstep with the selection — persist when set, and
   // remove the key entirely when cleared so nothing stale lingers.
   useEffect(() => {
+    // SUPER_ADMIN selection is intentionally session-only (in-memory): never
+    // persist it, and proactively clear any legacy key so a stale choice can't
+    // survive a reload and hijack the admin landing. OWNER/VIEWER persist as
+    // normal (harmless — they auto-select their single business regardless).
+    if (isSuperAdmin) {
+      localStorage.removeItem('selectedBusinessId');
+      return;
+    }
     if (selectedId) localStorage.setItem('selectedBusinessId', selectedId);
     else localStorage.removeItem('selectedBusinessId');
-  }, [selectedId]);
+  }, [selectedId, isSuperAdmin]);
 
   const selected = businesses.find((b) => String(b.id) === String(selectedId)) || null;
 

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useBusiness, themeFor } from '../context/BusinessContext';
 import { useAuth } from '../context/AuthContext';
 import BusinessSwitcher from './BusinessSwitcher';
+import BusinessLogo from './BusinessLogo';
 
 // Tailwind's JIT compiler can't detect dynamically interpolated class names
 // (e.g. `bg-${accent}`), so every accent class used anywhere in the app must
@@ -108,7 +109,11 @@ export default function Navbar() {
             <span
               className={`iv-badge hidden sm:inline-flex text-white shadow-soft ${BADGE_CLASSES[theme.accent]}`}
             >
-              <span className="iv-status-dot h-1.5 w-1.5" style={{ backgroundColor: 'currentColor' }} />
+              <BusinessLogo
+                name={selected.name}
+                logoUrl={selected.logoUrl}
+                className="h-4 w-4 rounded-full text-[9px] !shadow-none"
+              />
               {theme.label}
             </span>
           )}

@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { usePrompt } from '../context/PromptContext';
 import AuditMeta from '../components/AuditMeta';
+import LogoUploader from '../components/LogoUploader';
 
 /**
  * Category administration for write-capable roles (OWNER / SUPER_ADMIN).
@@ -15,7 +16,7 @@ import AuditMeta from '../components/AuditMeta';
  * + requireBusiness, so no in-component role checks are needed.
  */
 export default function CatalogSettings() {
-  const { selected, selectedId } = useBusiness();
+  const { selected, selectedId, refresh } = useBusiness();
   const { success, error: toastError } = useToast();
   const confirm = useConfirm();
   const prompt = usePrompt();
@@ -143,6 +144,17 @@ export default function CatalogSettings() {
         </p>
       ) : (
         <>
+          {/* Business branding — logo upload (OWNER can manage their own). */}
+          {selected && (
+            <section className="iv-card p-4 mb-5">
+              <h2 className="iv-display text-sm font-bold mb-3 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-ink/40">palette</span>
+                Branding
+              </h2>
+              <LogoUploader business={selected} onUpdated={() => refresh()} />
+            </section>
+          )}
+
           <form onSubmit={createCategory} className="flex gap-2 mb-5">
             <input
               required

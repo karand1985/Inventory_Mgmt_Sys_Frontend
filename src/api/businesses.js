@@ -37,4 +37,26 @@ export function remove(id) {
   return http.del(`/businesses/${id}`);
 }
 
-export const businessesApi = { list, create, update, remove };
+/**
+ * POST /businesses/{id}/logo — multipart logo upload to Cloudinary.
+ * Allowed for SUPER_ADMIN (any business) or the OWNER of this business.
+ * @param {number} id
+ * @param {File} file
+ * @returns {Promise<import('./types').Business>} the updated business (with logoUrl)
+ */
+export function uploadLogo(id, file) {
+  const form = new FormData();
+  form.append('file', file);
+  return http.upload(`/businesses/${id}/logo`, form);
+}
+
+/**
+ * DELETE /businesses/{id}/logo — remove the logo. Same authorization as upload.
+ * @param {number} id
+ * @returns {Promise<import('./types').Business>} the updated business (logoUrl cleared)
+ */
+export function removeLogo(id) {
+  return http.del(`/businesses/${id}/logo`);
+}
+
+export const businessesApi = { list, create, update, remove, uploadLogo, removeLogo };
